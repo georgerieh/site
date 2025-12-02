@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Team Info</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fafafa;
+      min-height: 100vh;
+      padding-top: 50px;
+      padding-bottom: 100px;
+    }
+
+    /* Android Status Bar */
+    .status-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 50px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-weight: 600;
+      font-size: 15px;
+      z-index: 1000;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* Page Title */
+    .page-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 20px 0 24px;
+      color: #202124;
+    }
+
+    .container { padding: 0 16px; }
+
+    /* Member Card */
+    .member-card {
+      background: white;
+      border-radius: 20px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.2s;
+    }
+    .member-card:active { transform: scale(0.98); }
+
+    .left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2.5px solid #e8def8;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .info {
+      flex: 1;
+    }
+    .name {
+      font-size: 17px;
+      font-weight: 500;
+      color: #202124;
+    }
+    .tasks {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin-top: 10px;
+      height: 8px;
+      background: #e8def8;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #9c6ade;
+      border-radius: 4px;
+      width: 0%; /* Will be set via JS */
+      transition: width 0.6s ease;
+    }
+
+    /* Info Button */
+    .info-btn {
+      background: #f1f3f4;
+      color: #5f6368;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Bottom Back Button */
+    .back-btn {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 56px;
+      background: white;
+      border: 1px solid #dadce0;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 28px;
+      color: #5f6368;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div>9:30</div>
+    <div>Signal Wi-Fi Battery</div>
+  </div>
+
+  <h1 class="page-title">Team Info</h1>
+
+  <div class="container" id="teamContainer">
+    <!-- Members will be injected here via JavaScript -->
+  </div>
+
+  <!-- Back Button -->
+  <button class="back-btn" onclick="history.back()">Back</button>
+
+  <script>
+    // ========================================
+    // API ENDPOINTS (replace with your real backend)
+    // ========================================
+    const API_BASE = 'https://your-api.example.com'; // Change this!
+
+    // GET current team members + progress
+    const GET_TEAM_INFO = `${API_BASE}/api/v1/team/current`;
+
+    // Optional: GET specific user details when "Info" is clicked
+    const GET_USER_DETAILS = (userId) => `${API_BASE}/api/v1/users/${userId}`;
+
+    // ========================================
+    // Sample data (remove when API is ready)
+    // ========================================
+    const mockTeamData = [
+      { id: 1, name: "You", tasks: "Tasks: -", progress: 65, isCurrentUser: true },
+      { id: 2, name: "User 1", tasks: "Assigned Tasks: -", progress: 100 },
+      { id: 3, name: "User 1", tasks: "Assigned Tasks: -", progress: 75 },
+      { id: 4, name: "User 1", tasks: "Assigned Tasks: -", progress: 40 },
+    ];
+
+    // ========================================
+    // Render Team Members
+    // ========================================
+    function renderTeam(team) {
+      const container = document.getElementById('teamContainer');
+      container.innerHTML = '';
+
+      team.forEach(member => {
+        const card = document.createElement('div');
+        card.className = 'member-card';
+
+        card.innerHTML = `
+          <div class="left">
+            <img src="https://randomuser.me/api/portraits/${member.id === 1 ? 'women/81' : 'men/' + (member.id * 11)}.jpg" alt="${member.name}" class="avatar">
+            <div class="info">
+              <div class="name">${member.name}${member.isCurrentUser ? ' <small style="color:#9c6ade">(You)</small>' : ''}</div>
+              <div class="tasks">${member.tasks}</div>
+              <div class="progress-container">
+                <div class="progress-bar" style="width: ${member.progress}%"></div>
+              </div>
+            </div>
+          </div>
+          <button class="info-btn" onclick="viewUser(${member.id})">Info</button>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // ========================================
+    // View User Details (future modal or page)
+    // ========================================
+    function viewUser(userId) {
+      // Future: open modal or navigate to user detail page
+      // fetch(GET_USER_DETAILS(userId)).then(...)
+      alert(`View details for User ID: ${userId}`);
+    }
+
+    // ========================================
+    // Load Data (switch between mock & real API)
+    // ========================================
+    async function loadTeam() {
+      try {
+        // Uncomment when API is ready:
+        // const res = await fetch(GET_TEAM_INFO);
+        // const data = await res.json();
+        // renderTeam(data.members);
+
+        // For now: use mock data
+        renderTeam(mockTeamData);
+      } catch (err) {
+        console.error('Failed to load team:', err);
+        renderTeam(mockTeamData); // fallback
+      }
+    }
+
+    // Load on page open
+    loadTeam();
+  </script>
+</body>
+</html>
