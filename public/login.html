@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to right, #000 0%, #000 15%, #f8f9fa 15%, #f8f9fa 85%, #000 85%, #000 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #login-container {
+      background: white;
+      padding: 40px 32px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    h3 {
+      margin: 0 0 32px 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #000;
+    }
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: #000;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #000;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    button:hover {
+      background-color: #1a1a1a;
+    }
+    #message {
+      margin: 0;
+      min-height: 24px;
+      font-size: 14px;
+      color: #d32f2f;
+    }
+    .forgot {
+      margin-top: 16px;
+    }
+    .forgot a {
+      color: #000;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .forgot a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="login-container">
+    <h3>Login</h3>
+    
+    <input id="email" placeholder="Email" type="email" required />
+    <input id="password" placeholder="Password" type="password" required />
+    
+    <button onclick="login()">Login</button>
+    
+    <p id="message"></p>
+    
+    <div class="forgot">
+      <a href="#">Forgot password?</a>
+    </div>
+  </div>
+  <!-- Firebase SDK (use latest v9+ modular style recommended, but keeping v9 compat for minimal changes) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+      authDomain: "colabspace-aed91.firebaseapp.com",
+  projectId: "colabspace-aed91",
+  storageBucket: "colabspace-aed91.firebasestorage.app",
+  messagingSenderId: "1096273499808",
+  appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      if (!email || !password) {
+        document.getElementById("message").innerText = "Please fill in both fields.";
+        return;
+      }
+      document.getElementById("message").innerText = "Signing in...";
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          document.getElementById("message").innerText = "Logged in successfully!";
+          // Redirect to your protected page
+          window.location.href = "/dashboard.html";  // change to your actual page
+        })
+        .catch((error) => {
+          document.getElementById("message").innerText = error.message;
+        });
+    }
+    // Optional: Allow Enter key to submit
+    document.getElementById("password").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") login();
+    });
+  </script>
+</body>
+</html>
+
