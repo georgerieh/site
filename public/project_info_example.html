@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>function goToDashboard() {
+        window.location.href = "/dashboard.html";  // or just close / go back if you prefer
+    }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimalist Task List</title>
@@ -156,8 +160,7 @@
 
     <div class="footer-nav">
         <span class="back-arrow">&larr;
-            <a href="/dashboard.html" class="menu-link">
-        </span>
+        <button class="random-btn" onclick="goToDashboard()">Random Choice</button>
         <div class="footer-button your-tasks">Your tasks</div>
         <div class="footer-button all-tasks">All tasks</div>
     </div>
