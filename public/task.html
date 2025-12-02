@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task 1 Detail (Enhanced)</title>
+    <title>Task 1 Detail (Final)</title>
     <style>
         /* Base Styling */
         body {
@@ -52,14 +52,31 @@
             cursor: pointer;
         }
 
-        /* Editable Task Details */
+        /* Editable Text Inputs (General Styling) */
+        .editable-text {
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-family: inherit;
+            color: inherit;
+            background: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .task-title-row input {
+            font-size: 1em; 
+            font-weight: bold; 
+            color: black;
+        }
+
+        /* Task Details */
         .task-details {
             font-size: 0.9em;
             color: #555;
             margin-bottom: 15px;
         }
         
-        /* New: Deadline input styling */
         .deadline-container {
             display: flex;
             align-items: center;
@@ -78,10 +95,10 @@
             border-radius: 6px;
             font-size: 1em;
             cursor: pointer;
-            flex-grow: 1; /* Makes the date input responsive */
+            flex-grow: 1;
         }
         
-        /* New: Responsibility Button */
+        /* Responsibility/Archive Buttons */
         .responsible-action {
             display: flex;
             justify-content: flex-start;
@@ -91,7 +108,7 @@
         .responsible-action button {
             padding: 8px 15px;
             border: none;
-            background-color: #6200ea; /* Purple color */
+            background-color: #6200ea;
             color: white;
             border-radius: 20px;
             font-weight: bold;
@@ -99,7 +116,6 @@
             font-size: 0.8em;
         }
 
-        /* Action Buttons (Archive) */
         .action-buttons {
             display: flex;
             justify-content: flex-end;
@@ -133,13 +149,23 @@
             width: 100%;
         }
 
-        /* Subtask & Text Block Containers */
+        /* Section Card (Checklist/Text Blocks) */
         .section-card {
             background-color: white;
             border-radius: 12px;
             padding: 10px 15px;
             margin-bottom: 20px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-card h4 {
+            margin-top: 0;
+        }
+        
+        .section-card .editable-text.heading {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding-bottom: 5px;
         }
 
         /* Subtask List Items */
@@ -151,12 +177,8 @@
             border-bottom: 1px solid #eee;
         }
         
-        .subtask-item input[type="text"] {
-            border: none;
-            font-weight: 500;
-            margin: 0;
-            padding: 0;
-            flex-grow: 1;
+        .subtask-item:last-child {
+            border-bottom: none;
         }
 
         .subtask-item input[type="checkbox"] {
@@ -164,17 +186,47 @@
             width: 20px;
             height: 20px;
             accent-color: #7a63c6;
+            flex-shrink: 0;
         }
-
+        
         .subtask-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+            margin-right: 10px;
         }
         
-        .subtask-content div:last-child {
+        .subtask-content .subtask-title-input {
+             font-weight: 500;
+             margin-bottom: 2px;
+        }
+        
+        .subtask-content .subtask-desc-input {
             font-size: 0.8em;
             color: #777;
+        }
+        
+        /* Subtask Calendar Input */
+        .subtask-calendar-container {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .subtask-calendar-container input[type="date"] {
+            width: 25px; /* Small size */
+            height: 25px;
+            padding: 0;
+            border: none;
+            opacity: 0; /* Hide the default date input */
+            position: absolute;
+            cursor: pointer;
+        }
+
+        .calendar-icon-btn {
+            font-size: 1.2em;
+            color: #555;
+            cursor: pointer;
         }
 
         /* Add New Button Styling */
@@ -194,27 +246,42 @@
 
         /* Dynamic Text Fields */
         .dynamic-text-field {
-            padding: 10px 0;
+            padding: 10px 0 20px 0;
         }
-
-        .dynamic-text-field textarea {
+        
+        .dynamic-text-field-inner {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+        }
+        
+        .dynamic-text-field-inner textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            height: 80px;
+            padding: 0;
+            border: none;
             box-sizing: border-box;
             font-size: 0.9em;
             resize: vertical;
-            min-height: 40px;
+            color: #333;
+        }
+        
+        .delete-btn {
+            color: red;
+            font-size: 0.8em;
+            margin-top: 5px;
+            cursor: pointer;
+            text-align: right;
+            display: block;
         }
 
-        /* Notes Section - uses section-card styling */
-
-        /* Global Action Buttons */
+        /* Global Action Buttons (Moved to the end) */
         .global-actions {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-top: 20px; /* Separator from content above */
+            margin-bottom: 10px;
         }
         
         .global-actions button {
@@ -239,17 +306,37 @@
         }
         
         /* Quick Replies/Inputs */
-        .quick-reply input[type="text"] {
+        .quick-reply-container {
+             margin-bottom: 20px;
+        }
+        
+        .quick-reply-item {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .quick-reply-input {
             width: 100%;
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 12px;
-            margin-bottom: 10px;
             box-sizing: border-box;
             font-size: 0.9em;
             background-color: white;
+            padding-right: 40px; /* Space for delete button */
         }
         
+        .quick-reply-delete {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            color: #888;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
         /* Footer Navigation */
         .footer-nav {
             display: flex;
@@ -277,7 +364,7 @@
         <div class="task-title-row">
             <h3>
                 <span class="info-icon">ⓘ</span>
-                <input type="text" value="Task 1" style="font-size: 1em; font-weight: bold; padding: 0; border: none; width: auto; margin: 0; display: inline; color: black;" onblur="updateTaskTitle(this.value)">
+                <input type="text" class="editable-text" value="Task 1" onblur="updateTaskTitle(this.value)">
                 <span>#Done</span>
             </h3>
         </div>
@@ -304,21 +391,30 @@
     </div>
 
     <div id="checklist-container">
-        <div class="section-card">
-            <h4 style="margin-top: 0;">Main Checklist</h4>
+        <div class="section-card" id="checklist-card-1">
+            <input type="text" class="editable-text heading" value="Main Checklist" onblur="updateChecklistHeading(1, this.value)">
+            
             <div id="subtask-list-1">
-                <div class="subtask-item">
+                <div class="subtask-item" id="subtask-1-1">
                     <input type="checkbox" checked onclick="toggleSubtask(1, 1)">
                     <div class="subtask-content">
-                        <input type="text" value="Create Google Doc" onblur="updateSubtaskTitle(1, 1, this.value)">
-                        <div>Description</div>
+                        <input type="text" class="editable-text subtask-title-input" value="Create Google Doc" onblur="updateSubtaskTitle(1, 1, this.value)">
+                        <input type="text" class="editable-text subtask-desc-input" value="Description" onblur="updateSubtaskDescription(1, 1, this.value)">
+                    </div>
+                    <div class="subtask-calendar-container" onclick="openSubtaskDeadline(1, 1)">
+                        <input type="date" value="2025-12-17" onchange="updateSubtaskDeadline(1, 1, this.value)">
+                        <span class="calendar-icon-btn">📅</span> 
                     </div>
                 </div>
-                <div class="subtask-item">
+                <div class="subtask-item" id="subtask-1-2">
                     <input type="checkbox" checked onclick="toggleSubtask(1, 2)">
                     <div class="subtask-content">
-                        <input type="text" value="Read Something" onblur="updateSubtaskTitle(1, 2, this.value)">
-                        <div>Description</div>
+                        <input type="text" class="editable-text subtask-title-input" value="Read Something" onblur="updateSubtaskTitle(1, 2, this.value)">
+                        <input type="text" class="editable-text subtask-desc-input" value="Description" onblur="updateSubtaskDescription(1, 2, this.value)">
+                    </div>
+                    <div class="subtask-calendar-container" onclick="openSubtaskDeadline(1, 2)">
+                        <input type="date" onchange="updateSubtaskDeadline(1, 2, this.value)">
+                        <span class="calendar-icon-btn">📅</span> 
                     </div>
                 </div>
             </div>
@@ -334,10 +430,13 @@
 
     <h4 style="margin-top: 0; margin-bottom: 10px;">Supporting Details</h4>
     <div id="text-field-container">
-        <div class="section-card dynamic-text-field">
-            <p style="font-weight: bold; margin: 0 0 5px 0;">Important Notes (Editable)</p>
-            <textarea placeholder="The link to the file is https://docs.google.c..." onblur="saveDynamicField(1, this.value)">The link to the file is https://docs.google.c...</textarea>
-            </div>
+        <div class="dynamic-text-field" id="text-field-1">
+            <div class="section-card dynamic-text-field-inner">
+                <input type="text" class="editable-text heading" value="Important Notes" onblur="updateFieldHeading(1, this.value)">
+                <textarea placeholder="The link to the file is https://docs.google.c..." onblur="saveDynamicField(1, this.value)">The link to the file is https://docs.google.c...</textarea>
+                <span class="delete-btn" onclick="deleteDynamicField(1)">Delete Field</span>
+                </div>
+        </div>
     </div>
     
     <div class="add-new-btn" onclick="addDynamicTextField()">
@@ -349,17 +448,25 @@
         <button class="discuss-btn" onclick="openChat()">Discuss in chat</button>
         </div>
     
-    <div class="quick-reply">
-        <input type="text" placeholder="I need your help on..." onchange="sendQuickReply(this.value)">
-        <input type="text" placeholder="How this is even real" onchange="sendQuickReply(this.value)">
+    <div class="quick-reply-container" id="quick-reply-container">
+        <div class="quick-reply-item" id="quick-reply-1">
+            <input type="text" class="quick-reply-input" value="I need your help on..." onchange="sendQuickReply(1, this.value)">
+            <span class="quick-reply-delete" onclick="deleteQuickReply(1)">&times;</span>
+        </div>
+        <div class="quick-reply-item" id="quick-reply-2">
+            <input type="text" class="quick-reply-input" value="How this is even real" onchange="sendQuickReply(2, this.value)">
+            <span class="quick-reply-delete" onclick="deleteQuickReply(2)">&times;</span>
+        </div>
         </div>
 
     <div class="footer-nav">
         <div class="back-btn" onclick="history.back()">&#8592;</div> </div>
     
     <script>
-        let checklistCounter = 2; // Starts from 2 since 1 is pre-existing
-        let fieldCounter = 2; // Starts from 2 since 1 is pre-existing
+        let checklistCounter = 2; 
+        let fieldCounter = 2; 
+        let subtaskCounter = 3; // Starts after 1-1 and 1-2
+        let replyCounter = 3; // Starts after 1 and 2
 
         // --- Core Task Updates ---
         function updateTaskTitle(title) {
@@ -374,24 +481,39 @@
         function archiveTask() {
             console.log('Task archived! (API call to POST /api/tasks/{taskId}/archive)');
         }
-        
+
         // --- Dynamic Text Fields ---
         function addDynamicTextField() {
             const container = document.getElementById('text-field-container');
             const newFieldId = fieldCounter++;
             
-            const newCard = document.createElement('div');
-            newCard.className = 'section-card dynamic-text-field';
-            newCard.innerHTML = `
-                <p style="font-weight: bold; margin: 0 0 5px 0;">New Text Field ${newFieldId}</p>
-                <textarea placeholder="Enter details here..." onblur="saveDynamicField(${newFieldId}, this.value)"></textarea>
+            const newField = document.createElement('div');
+            newField.className = 'dynamic-text-field';
+            newField.id = `text-field-${newFieldId}`;
+            newField.innerHTML = `
+                <div class="section-card dynamic-text-field-inner">
+                    <input type="text" class="editable-text heading" value="New Text Field ${newFieldId}" onblur="updateFieldHeading(${newFieldId}, this.value)">
+                    <textarea placeholder="Enter details here..." onblur="saveDynamicField(${newFieldId}, this.value)"></textarea>
+                    <span class="delete-btn" onclick="deleteDynamicField(${newFieldId})">Delete Field</span>
+                </div>
             `;
-            container.appendChild(newCard);
+            container.appendChild(newField);
             console.log(`New text field added. (API call to POST /api/tasks/{taskId}/fields)`);
         }
         
+        function updateFieldHeading(fieldId, heading) {
+            console.log(`Field ${fieldId} heading updated: ${heading} (API call to PUT /api/tasks/{taskId}/fields/${fieldId})`);
+        }
+        
         function saveDynamicField(fieldId, content) {
-            console.log(`Field ${fieldId} content updated to: "${content}" (API call to PUT /api/tasks/{taskId}/fields/${fieldId})`);
+            console.log(`Field ${fieldId} content updated. (API call to PUT /api/tasks/{taskId}/fields/${fieldId})`);
+        }
+        
+        function deleteDynamicField(fieldId) {
+            if (confirm(`Are you sure you want to delete Text Field ${fieldId}?`)) {
+                document.getElementById(`text-field-${fieldId}`).remove();
+                console.log(`Text Field ${fieldId} deleted. (API call to DELETE /api/tasks/{taskId}/fields/${fieldId})`);
+            }
         }
 
         // --- Dynamic Checklists ---
@@ -401,35 +523,60 @@
             
             const newCard = document.createElement('div');
             newCard.className = 'section-card';
+            newCard.id = `checklist-card-${newChecklistId}`;
             newCard.innerHTML = `
-                <h4 style="margin-top: 0;">New Checklist ${newChecklistId}</h4>
+                <input type="text" class="editable-text heading" value="New Checklist ${newChecklistId}" onblur="updateChecklistHeading(${newChecklistId}, this.value)">
                 <div id="subtask-list-${newChecklistId}">
                     </div>
                 <div class="add-new-btn" onclick="addNewSubtask(${newChecklistId})">
                     <span>+</span> Add new detail
                 </div>
+                <span class="delete-btn" onclick="deleteChecklist(${newChecklistId})">Delete Checklist</span>
             `;
             container.appendChild(newCard);
             console.log(`New checklist ${newChecklistId} added. (API call to POST /api/tasks/{taskId}/checklists)`);
-            addNewSubtask(newChecklistId); // Add an initial subtask
+            addNewSubtask(newChecklistId);
+        }
+        
+        function updateChecklistHeading(checklistId, heading) {
+            console.log(`Checklist ${checklistId} heading updated: ${heading} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId})`);
+        }
+        
+        function deleteChecklist(checklistId) {
+            if (confirm(`Are you sure you want to delete Checklist ${checklistId}?`)) {
+                document.getElementById(`checklist-card-${checklistId}`).remove();
+                console.log(`Checklist ${checklistId} deleted. (API call to DELETE /api/tasks/{taskId}/checklists/${checklistId})`);
+            }
         }
         
         function addNewSubtask(checklistId) {
             const list = document.getElementById(`subtask-list-${checklistId}`);
-            // Simple method to find the next subtask ID based on current children count
-            const subtaskId = list.children.length + 1; 
+            const subtaskId = subtaskCounter++; 
             
             const newItem = document.createElement('div');
             newItem.className = 'subtask-item';
+            newItem.id = `subtask-${checklistId}-${subtaskId}`;
             newItem.innerHTML = `
                 <input type="checkbox" onclick="toggleSubtask(${checklistId}, ${subtaskId})">
                 <div class="subtask-content">
-                    <input type="text" value="" placeholder="New Subtask" onblur="updateSubtaskTitle(${checklistId}, ${subtaskId}, this.value)">
-                    <div>Description (optional)</div>
+                    <input type="text" class="editable-text subtask-title-input" value="" placeholder="New Subtask Title" onblur="updateSubtaskTitle(${checklistId}, ${subtaskId}, this.value)">
+                    <input type="text" class="editable-text subtask-desc-input" value="Description" placeholder="Description (optional)" onblur="updateSubtaskDescription(${checklistId}, ${subtaskId}, this.value)">
                 </div>
+                <div class="subtask-calendar-container" onclick="openSubtaskDeadline(${checklistId}, ${subtaskId})">
+                    <input type="date" onchange="updateSubtaskDeadline(${checklistId}, ${subtaskId}, this.value)">
+                    <span class="calendar-icon-btn">📅</span> 
+                </div>
+                <span class="quick-reply-delete" style="font-size: 1em; right: -5px;" onclick="deleteSubtask(${checklistId}, ${subtaskId})">&times;</span>
             `;
             list.appendChild(newItem);
-            console.log(`New subtask added to checklist ${checklistId}. (API call to POST /api/tasks/{taskId}/checklists/${checklistId}/subtasks)`);
+            console.log(`New subtask ${subtaskId} added to checklist ${checklistId}. (API call to POST /api/tasks/{taskId}/checklists/${checklistId}/subtasks)`);
+        }
+        
+        function deleteSubtask(checklistId, subtaskId) {
+            if (confirm(`Delete subtask ${subtaskId}?`)) {
+                document.getElementById(`subtask-${checklistId}-${subtaskId}`).remove();
+                console.log(`Subtask ${subtaskId} deleted. (API call to DELETE /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+            }
         }
         
         function toggleSubtask(checklistId, subtaskId) {
@@ -437,18 +584,44 @@
         }
         
         function updateSubtaskTitle(checklistId, subtaskId, title) {
-            console.log(`Checklist ${checklistId}, Subtask ${subtaskId} title updated to: ${title} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+            console.log(`C${checklistId}, S${subtaskId} title updated: ${title} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+        }
+        
+        function updateSubtaskDescription(checklistId, subtaskId, desc) {
+            console.log(`C${checklistId}, S${subtaskId} description updated: ${desc} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+        }
+        
+        function updateSubtaskDeadline(checklistId, subtaskId, date) {
+            console.log(`C${checklistId}, S${subtaskId} deadline set to: ${date} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+        }
+        
+        function openSubtaskDeadline(checklistId, subtaskId) {
+            // Programmatically trigger the date picker
+            const input = document.querySelector(`#subtask-${checklistId}-${subtaskId} input[type="date"]`);
+            if (input) {
+                input.click();
+            }
         }
 
+        // --- Quick Replies ---
+        function sendQuickReply(replyId, message) {
+            console.log(`Quick reply ${replyId} sent: "${message}" (API call to POST /api/tasks/{taskId}/messages)`);
+        }
+        
+        function deleteQuickReply(replyId) {
+            if (confirm('Are you sure you want to delete this quick reply field?')) {
+                document.getElementById(`quick-reply-${replyId}`).remove();
+                // If these are user-defined quick replies, an API call would be needed:
+                // console.log(`Quick reply field ${replyId} deleted. (API call to DELETE /api/users/{userId}/quick-replies/${replyId})`);
+            }
+        }
+        
         // --- Global Actions (Same as previous) ---
         function notifyEveryone() {
             console.log('Notification sent to everyone! (API call to POST /api/tasks/{taskId}/notify)');
         }
         function openChat() {
             console.log('Opening task chat... (API call to GET /api/tasks/{taskId}/chat)');
-        }
-        function sendQuickReply(message) {
-            console.log(`Quick reply sent: "${message}" (API call to POST /api/tasks/{taskId}/messages)`);
         }
     </script>
 
