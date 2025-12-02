@@ -4,6 +4,88 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+          authDomain: "colabspace-aed91.firebaseapp.com",
+      projectId: "colabspace-aed91",
+      storageBucket: "colabspace-aed91.firebasestorage.app",
+      messagingSenderId: "1096273499808",
+      appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+        };
+        firebase.initializeApp(firebaseConfig);
+  </script>
+  <script>
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) return;
+      
+        const db = firebase.firestore();
+      
+        // 1. Get numeric user_id
+        const usersSnap = await db.collection("user")
+                                  .where("email", "==", user.email)
+                                  .get();
+        if (usersSnap.empty) {
+          console.log("User not found in Firestore");
+          return;
+        }
+        const userDoc = usersSnap.docs[0];
+        const numericUserId = userDoc.data().id;
+      
+        // 2. Get team_ids the user belongs to
+        const teamSnap = await db.collection("team")
+                                 .where("users", "array-contains", numericUserId)
+                                 .get();
+        const teamIds = teamSnap.docs.map(doc => doc.data().team_id);
+      
+        if (!teamIds.length) return; // no teams → nothing to display
+      
+        // 3. Fetch tasks for these team_ids
+        db.collection("tasks")
+          .where("team_id", "in", teamIds)
+          .onSnapshot(snapshot => {
+            const container = document.querySelector('.container');
+            container.innerHTML = ""; // clear existing static tasks
+      
+            snapshot.forEach(doc => {
+              const task = doc.data();
+              const taskHtml = `
+                <div class="task-card" onclick="window.location.href='task.html?task_id=${task.task_id}'" style="cursor:pointer;">
+                  <div class="task-header">
+                    <div style="display:flex;align-items:center;">
+                      <span class="info-icon">ℹ</span>
+                      <div>
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">Deadline: ${task.deadline}</div>
+                        <div class="task-meta">Status: ${task.status}</div>
+                        <div class="task-meta">
+                        <div>Checklist items: ${Array.isArray(task.checklist) ? task.checklist.length : 0}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-done" onclick="event.stopPropagation(); markDone(${task.task_id})">Mark Done</button>
+                </div>
+              `;
+              container.insertAdjacentHTML("beforeend", taskHtml);
+            });
+          });
+      });
+  </script>
+  <script>
+    function markDone(taskId) {
+        const db = firebase.firestore();
+        const taskRef = db.collection("tasks").where("task_id", "==", taskId).limit(1);
+      
+        taskRef.get().then(snap => {
+          if (snap.empty) return;
+          snap.docs[0].ref.update({ status: "Completed" });
+        });
+      }
+  </script>
   <style>
     body {
       margin: 0;
@@ -170,7 +252,7 @@
     </div>
 
     <div class="menu-item">
-        <a href="/project_info_example.html" class="menu-link">
+        <a href="/project_info.html" class="menu-link">
           <div style="display:flex;align-items:center;">
             <span class="star">★</span>
             <div>
@@ -203,34 +285,37 @@
       <div class="progress-bar"></div>
     </div>
   </div>
-
-  <div class="task-card">
-    <div class="task-header">
-      <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User">
-      <div>
-        <div class="task-title">Task 1</div>
-        <div class="task-meta">Deadline: 17/12/25</div>
-        <div class="task-meta">Status: 25% Done</div>
-      </div>
-    </div>
-    <button class="btn btn-done">Mark Done</button>
-  </div>
-
-  <div class="task-card">
-    <div class="task-header">
-      <div style="display:flex;align-items:center;">
-        <span class="info-icon">ℹ</span>
-        <div>
-          <div class="task-title">Task 2</div>
-          <div class="task-meta">Deadline: 17/12/25</div>
-          <div class="task-meta">Status: 25% Done</div>
-        </div>
-      </div>
-    </div>
-    <button class="btn btn-done">Mark Done</button>
-  </div>
+  <div class="container"></div>
 
   <div class="back-btn" onclick="history.back()">↩</div>
+  <script>
+    firebase.auth().onAuthStateChanged(async user => {
+        if (user) {
+            const userName = user.displayName || "User";
+    
+            // Replace placeholder
+            document.querySelector(".header h1").innerHTML =
+                `Hi, ${userName} 👋`;
 
+            const db = firebase.firestore();
+            const usersSnap = await db.collection("user").where("email", "==", user.email).get();
+            if (usersSnap.empty) return;
+            const userId = usersSnap.docs[0].data().id;
+
+            const tasksSnap = await db.collection("tasks").where("user_id", "==", userId).get();
+            let totalTasks = tasksSnap.size;
+            let completedTasks = 0;
+            tasksSnap.forEach(doc => {
+                const t = doc.data();
+                if (t.status.toLowerCase() === "completed") completedTasks++;
+            });
+            const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            document.querySelector(".progress-bar").style.width = progressPercent + "%";
+        } else {
+            // Not signed in → redirect or keep placeholder
+            // window.location.href = "/login.html";
+        }
+    });
+    </script>
 </body>
 </html>

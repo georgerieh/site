@@ -92,56 +92,87 @@
       <a href="#">Forgot password?</a>
     </div>
   </div>
-  <!-- Firebase SDK (use latest v9+ modular style recommended, but keeping v9 compat for minimal changes) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
-      authDomain: "colabspace-aed91.firebaseapp.com",
-  projectId: "colabspace-aed91",
-  storageBucket: "colabspace-aed91.firebasestorage.app",
-  messagingSenderId: "1096273499808",
-  appId: "1:1096273499808:web:42012f619a3cbced321bc5"
-    };
-    firebase.initializeApp(firebaseConfig);
-    function login() {
-
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      if (!email || !password) {
-        document.getElementById("message").innerText = "Please fill in both fields.";
-        return;
-      }
-      document.getElementById("message").innerText = "Signing in...";
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          document.getElementById("message").innerText = "Logged in successfully!";
-          // Redirect to your protected page
-          window.location.href = "/index.html";  // change to your actual page
-        })
-        .catch((error) => {
-          document.getElementById("message").innerText = error.message;
-        });
-    }
-    // Optional: Allow Enter key to submit
-    document.getElementById("password").addEventListener("keypress", function(e) {
-      if (e.key === "Enter") login();
-    });
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
+    <!-- Firebase SDK (use latest v9+ modular style recommended, but keeping v9 compat for minimal changes) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+        authDomain: "colabspace-aed91.firebaseapp.com",
+        projectId: "colabspace-aed91",
+        storageBucket: "colabspace-aed91.firebasestorage.app",
+        messagingSenderId: "1096273499808",
+        appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
   
-      firebase.auth().signInWithPopup(provider)
-        .then((result) => {
-          document.getElementById("message").innerText = "Logged in!";
-          window.location.href = "/join_group.html"; // your redirect
-        })
-        .catch((error) => {
-          document.getElementById("message").innerText = error.message;
+      function login() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        if (!email || !password) {
+          document.getElementById("message").innerText = "Please fill in both fields.";
+          return;
+        }
+        document.getElementById("message").innerText = "Signing in...";
+        firebase.auth().signInWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            document.getElementById("message").innerText = "Logged in successfully!";
+            // Redirect to your protected page
+            window.location.href = "/index.html";  // change to your actual page
+          })
+          .catch((error) => {
+            document.getElementById("message").innerText = error.message;
+          });
+      }
+      // Optional: Allow Enter key to submit
+      const passwordInput = document.getElementById("password");
+      if(passwordInput){
+        passwordInput.addEventListener("keypress", function(e) {
+          if (e.key === "Enter") login();
         });
-    }
-  </script>
+      }
+  
+      function googleLogin() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+  
+        firebase.auth().signInWithPopup(provider)
+          .then(async (result) => {
+            const user = result.user;
+            if (!user) {
+              document.getElementById("message").innerText = "No user information found.";
+              return;
+            }
+            const usersRef = db.collection("user");
+            const querySnapshot = await usersRef.where("email", "==", user.email).get();
+  
+            if (querySnapshot.empty) {
+              // No user document found, create new user document with numeric id
+              const snapshot = await usersRef.orderBy("id", "desc").limit(1).get();
+              let newId = 1;
+              if (!snapshot.empty) {
+                const maxIdDoc = snapshot.docs[0];
+                const maxId = maxIdDoc.data().id;
+                if (typeof maxId === "number") {
+                  newId = maxId + 1;
+                }
+              }
+              await usersRef.add({
+                id: newId,
+                email: user.email,
+                displayName: user.displayName || "",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            }
+            document.getElementById("message").innerText = "Logged in!";
+            window.location.href = "/group_select.html"; // your redirect
+          })
+          .catch((error) => {
+            document.getElementById("message").innerText = error.message;
+          });
+      }
+    </script>
   
 </body>
 </html>
-

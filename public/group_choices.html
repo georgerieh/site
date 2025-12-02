@@ -135,79 +135,163 @@
   </style>
 </head>
 <body>
-
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+          authDomain: "colabspace-aed91.firebaseapp.com",
+      projectId: "colabspace-aed91",
+      storageBucket: "colabspace-aed91.firebasestorage.app",
+      messagingSenderId: "1096273499808",
+      appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+        };
+        firebase.initializeApp(firebaseConfig);
+  </script>
   <div class="container">
-
-    <!-- Group 1 -->
-    <div class="group-card">
-      <div class="left-side">
-        <div class="radio"></div>
-        <div class="avatars">
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="">
-          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="">
-          <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="">
-        </div>
-        <div class="group-info">
-          <div class="group-name">Group 1</div>
-        </div>
-      </div>
-      <button class="action-btn join">Join Group</button>
-    </div>
-
-    <!-- Group 2 (Full) -->
-    <div class="group-card">
-      <div class="left-side">
-        <div class="radio"></div>
-        <div class="avatars">
-          <img src="https://randomuser.me/api/portraits/men/46.jpg" alt="">
-          <img src="https://randomuser.me/api/portraits/women/81.jpg" alt="">
-        </div>
-        <div class="group-info">
-          <div class="group-name">Group 2</div>
-          <div class="extra">+1</div>
-        </div>
-      </div>
-      <button class="action-btn full">Full group</button>
-    </div>
-
-    <!-- Group 3, 4, 5 -->
-    <div class="group-card">
-      <div class="left-side">
-        <div class="radio"></div>
-        <div class="avatars">
-          <img src="https://randomuser.me/api/portraits/men/86.jpg" alt="">
-        </div>
-        <div class="group-info"><div class="group-name">Group 3</div></div>
-      </div>
-      <button class="action-btn join">Join Group</button>
-    </div>
-
-    <div class="group-card">
-      <div class="left-side">
-        <div class="radio"></div>
-        <div class="avatars">
-          <img src="https://randomuser.me/api/portraits/women/23.jpg" alt="">
-        </div>
-        <div class="group-info"><div class="group-name">Group 4</div></div>
-      </div>
-      <button class="action-btn join">Join Group</button>
-    </div>
-
-    <div class="group-card">
-      <div class="left-side">
-        <div class="radio"></div>
-        <div class="avatars">
-          <img src="https://randomuser.me/api/portraits/men/56.jpg" alt="">
-        </div>
-        <div class="group-info"><div class="group-name">Group 5</div></div>
-      </div>
-      <button class="action-btn join">Join Group</button>
-    </div>
-
   </div>
 
   <!-- Dark Create Group Button -->
   <button class="create-btn">Create Group</button>
 
+  <script>
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Replace with actual projectId (from URL or constant)
+const projectId = 1;
+
+let currentUserId = null;
+
+// Fetch current user_id
+auth.onAuthStateChanged(async user => {
+    if (!user) {
+        console.log("User not signed in");
+        return;
+    }
+      
+        // 1. Get numeric user_id
+    const userSnap = await db.collection("user")
+                              .where("email", "==", user.email)
+                              .get();
+    if (userSnap.empty) {
+        console.log("User not found in Firestore");
+        return;
+    }
+    currentUserId = userSnap.docs[0].data().id;
+
+    await renderTeams();
+});
+
+// Function to render all teams
+async function renderTeams() {
+    const projectQuery = await db.collection("project")
+    .where("project_id", "==", projectId)
+    .get();
+
+    if (projectQuery.empty) {
+        console.error("Project not found");
+        return;
+    }
+    const projectDoc = projectQuery.docs[0];
+    const maxUsers = Number(projectDoc.data().max_number);
+
+    const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
+    const container = document.querySelector(".container");
+    container.innerHTML = ""; // clear previous content
+
+    teamSnap.docs.forEach(doc => {
+        const team = doc.data();
+        const usersArray = Array.isArray(team.users) ? team.users.map(u => Number(u)) : [];
+        const currentUsers = usersArray.length;
+        const canJoin = currentUsers < maxUsers && !usersArray.includes(currentUserId);
+
+        const teamHtml = `
+            <div class="group-card">
+                <div class="left-side">
+                    <div class="radio"></div>
+                    <div class="avatars"></div>
+                    <div class="group-info">
+                        <div class="group-name">${team.name || "Team " + team.team_id}</div>
+                        <div class="extra">${currentUsers}/${maxUsers}</div>
+                    </div>
+                </div>
+                ${usersArray.includes(currentUserId)
+                    ? `<button class="action-btn full" disabled>Already Member</button>`
+                    : currentUsers >= maxUsers
+                        ? `<button class="action-btn full" disabled>Full</button>`
+                        : `<button class="action-btn join" onclick="joinTeam(${team.team_id}, ${maxUsers})">Join Group</button>`
+                }
+            </div>
+        `;
+        container.insertAdjacentHTML("beforeend", teamHtml);
+    });
+}
+
+// Join a team
+async function joinTeam(teamId, maxUsers) {
+    if (!currentUserId) return;
+
+    const existingTeamSnap = await db.collection("team")
+        .where("project_id", "==", projectId)
+        .where("users", "array-contains", currentUserId)
+        .get();
+
+    if (!existingTeamSnap.empty) {
+        alert("You can join only one group per project.");
+        return;
+    }
+
+    const teamRef = db.collection("team").where("team_id", "==", teamId).limit(1);
+    const snap = await teamRef.get();
+    if (snap.empty) {
+        alert("Team not found");
+        return;
+    }
+
+    const docRef = snap.docs[0].ref;
+    const teamData = snap.docs[0].data();
+    const users = Array.isArray(teamData.users) ? teamData.users : [];
+
+    if (users.length >= maxUsers) {
+        alert("Team is already full");
+        return;
+    }
+    if (users.includes(currentUserId)) {
+        alert("You are already in this team");
+        return;
+    }
+
+    await docRef.update({
+        users: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+    });
+
+    alert("You have successfully joined the team!");
+    // Redirect to dashboard
+    window.location.href = "/dashboard.html";
+}
+
+// Create a new group
+async function createGroup(projectId) {
+    // Fetch all existing teams for the project to determine max team_id
+    const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
+    const existingIds = teamSnap.docs.map(doc => doc.data().team_id);
+    const newTeamId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+
+    const newTeam = {
+        team_id: newTeamId,
+        project_id: projectId,
+        users: [],
+        name: "Team " + newTeamId
+    };
+    await db.collection("team").doc(String(newTeamId)).set(newTeam);
+    alert("New group created!");
+    await renderTeams();
+}
+
+// Add click handler to create button
+document.querySelector(".create-btn").addEventListener("click", () => createGroup(projectId));
+</script>
 </body>
 </html>

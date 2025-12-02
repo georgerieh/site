@@ -360,113 +360,165 @@
 </head>
 <body>
 
-    <div class="task-header-card">
-        <div class="task-title-row">
-            <h3>
-                <span class="info-icon">ⓘ</span>
-                <input type="text" class="editable-text" value="Task 1" onblur="updateTaskTitle(this.value)">
-                <span>#Done</span>
-            </h3>
-        </div>
-
-        <div class="task-details">
-            <div class="deadline-container">
-                <label for="deadline-input">Deadline:</label>
-                <input type="date" id="deadline-input" value="2025-12-17" onchange="updateDeadline(this.value)">
-            </div>
-            <p>Status: 100% Done</p>
-        </div>
-
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-        
-        <div class="responsible-action">
-            <button onclick="setResponsible()">Select me as responsible</button>
-            </div>
-
-        <div class="action-buttons">
-            <button onclick="archiveTask()">Mark archive?</button>
-            </div>
-    </div>
-
-    <div id="checklist-container">
-        <div class="section-card" id="checklist-card-1">
-            <input type="text" class="editable-text heading" value="Main Checklist" onblur="updateChecklistHeading(1, this.value)">
-            
-            <div id="subtask-list-1">
-                <div class="subtask-item" id="subtask-1-1">
-                    <input type="checkbox" checked onclick="toggleSubtask(1, 1)">
-                    <div class="subtask-content">
-                        <input type="text" class="editable-text subtask-title-input" value="Create Google Doc" onblur="updateSubtaskTitle(1, 1, this.value)">
-                        <input type="text" class="editable-text subtask-desc-input" value="Description" onblur="updateSubtaskDescription(1, 1, this.value)">
-                    </div>
-                    <div class="subtask-calendar-container" onclick="openSubtaskDeadline(1, 1)">
-                        <input type="date" value="2025-12-17" onchange="updateSubtaskDeadline(1, 1, this.value)">
-                        <span class="calendar-icon-btn">📅</span> 
-                    </div>
-                </div>
-                <div class="subtask-item" id="subtask-1-2">
-                    <input type="checkbox" checked onclick="toggleSubtask(1, 2)">
-                    <div class="subtask-content">
-                        <input type="text" class="editable-text subtask-title-input" value="Read Something" onblur="updateSubtaskTitle(1, 2, this.value)">
-                        <input type="text" class="editable-text subtask-desc-input" value="Description" onblur="updateSubtaskDescription(1, 2, this.value)">
-                    </div>
-                    <div class="subtask-calendar-container" onclick="openSubtaskDeadline(1, 2)">
-                        <input type="date" onchange="updateSubtaskDeadline(1, 2, this.value)">
-                        <span class="calendar-icon-btn">📅</span> 
-                    </div>
-                </div>
-            </div>
-            <div class="add-new-btn" onclick="addNewSubtask(1)">
-                <span>+</span> Add new detail
-                </div>
-        </div>
-        </div>
-    
+    <div id="task-header-dynamic"></div>
+    <div id="checklist-container"></div>
     <div class="add-new-btn" onclick="addNewChecklist()">
         <span>+</span> Add new checklist
-        </div>
-
-    <h4 style="margin-top: 0; margin-bottom: 10px;">Supporting Details</h4>
-    <div id="text-field-container">
-        <div class="dynamic-text-field" id="text-field-1">
-            <div class="section-card dynamic-text-field-inner">
-                <input type="text" class="editable-text heading" value="Important Notes" onblur="updateFieldHeading(1, this.value)">
-                <textarea placeholder="The link to the file is https://docs.google.c..." onblur="saveDynamicField(1, this.value)">The link to the file is https://docs.google.c...</textarea>
-                <span class="delete-btn" onclick="deleteDynamicField(1)">Delete Field</span>
-                </div>
-        </div>
     </div>
-    
+    <h4 style="margin-top: 0; margin-bottom: 10px;">Supporting Details</h4>
+    <div id="text-field-container"></div>
     <div class="add-new-btn" onclick="addDynamicTextField()">
         <span>+</span> Add new text field
-        </div>
-    
+    </div>
     <div class="global-actions">
         <button class="notify-btn" onclick="notifyEveryone()">Notify everyone</button>
         <button class="discuss-btn" onclick="openChat()">Discuss in chat</button>
-        </div>
-    
-    <div class="quick-reply-container" id="quick-reply-container">
-        <div class="quick-reply-item" id="quick-reply-1">
-            <input type="text" class="quick-reply-input" value="I need your help on..." onchange="sendQuickReply(1, this.value)">
-            <span class="quick-reply-delete" onclick="deleteQuickReply(1)">&times;</span>
-        </div>
-        <div class="quick-reply-item" id="quick-reply-2">
-            <input type="text" class="quick-reply-input" value="How this is even real" onchange="sendQuickReply(2, this.value)">
-            <span class="quick-reply-delete" onclick="deleteQuickReply(2)">&times;</span>
-        </div>
-        </div>
-
+    </div>
+    <div class="quick-reply-container" id="quick-reply-container"></div>
     <div class="footer-nav">
-        <div class="back-btn" onclick="history.back()">&#8592;</div> </div>
+        <div class="back-btn" onclick="history.back()">&#8592;</div>
+    </div>
     
+    <!-- Firebase App (the core Firebase SDK) -->
+    <div id="teamContainer"></div>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>
-        let checklistCounter = 2; 
-        let fieldCounter = 2; 
-        let subtaskCounter = 3; // Starts after 1-1 and 1-2
-        let replyCounter = 3; // Starts after 1 and 2
+    const firebaseConfig = {
+      apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+      authDomain: "colabspace-aed91.firebaseapp.com",
+      projectId: "colabspace-aed91",
+      storageBucket: "colabspace-aed91.firebasestorage.app",
+      messagingSenderId: "1096273499808",
+      appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+        // --- GLOBAL COUNTERS ---
+        let checklistCounter = 1;
+        let fieldCounter = 1;
+        let subtaskCounter = 1;
+        let replyCounter = 1;
+
+        // --- GET THE TASK ID (from URL or hardcoded) ---
+        // Example: ?task_id=abc123
+        function getTaskIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('task_id') || "demo-task-1"; // fallback for demo
+        }
+
+        // --- DYNAMIC RENDERING FROM FIRESTORE ---
+        async function renderTaskFromFirestore() {
+            const taskId = Number(getTaskIdFromUrl()); // ensure numeric
+            const taskSnap = await db.collection('tasks').where('task_id', '==', taskId).get();
+        
+            if (taskSnap.empty) {
+                document.getElementById('task-header-dynamic').innerHTML = "<div class='section-card'>Task not found.</div>";
+                return;
+            }
+        
+            const task = taskSnap.docs[0].data();
+            renderTaskHeader(task);
+            renderChecklists(task);
+            renderTextFields(task);
+            renderQuickReplies(task);
+        }
+
+        // --- HEADER ---
+        async function renderTaskHeader(task) {
+            // Fetch responsible user's email
+            let responsibleEmail = "";
+            if (task.user_id) {
+                const userSnap = await db.collection("user").where("id", "==", task.user_id).get();
+                if (!userSnap.empty) responsibleEmail = userSnap.docs[0].data().email;
+            }
+        
+            // Compute progress bar: ratio of unchecked checklist items
+            let checklist = task.info && task.info.checklist ? task.info.checklist : [];
+            const totalItems = checklist.length;
+            const remaining = checklist.filter(c => !c.done).length;
+            const progressPercent = totalItems ? Math.round((totalItems - remaining)/totalItems*100) : 0;
+        
+            document.getElementById('task-header-dynamic').innerHTML = `
+                <div class="task-header-card">
+                    <div class="task-title-row">
+                        <h3>${escapeHtml(task.title || '')}</h3>
+                        <span>Status: ${progressPercent}%</span>
+                    </div>
+                    <div class="task-details">
+                        <p>Responsible: ${escapeHtml(responsibleEmail)}</p>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${progressPercent}%"></div></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- CHECKLISTS & SUBTASKS ---
+        function renderChecklists(task) {
+            const container = document.getElementById('checklist-container');
+            container.innerHTML = '';
+            checklistCounter = 1;
+        
+            if (!task.info || !Array.isArray(task.info.checklist)) return;
+        
+            task.info.checklist.forEach((item, idx) => {
+                const checklistId = checklistCounter++;
+                const card = document.createElement('div');
+                card.className = 'section-card';
+                card.id = `checklist-card-${checklistId}`;
+        
+                card.innerHTML = `
+                    <input type="text" class="editable-text heading" value="${escapeHtml(item.Title || '')}" onblur="updateChecklistHeading(${checklistId}, this.value)">
+                    <input type="date" value="${item.Deadline ? formatDeadline(item.Deadline) : ''}" onchange="updateChecklistDeadline(${checklistId}, this.value)">
+                    <textarea onblur="updateChecklistDescription(${checklistId}, this.value)">${escapeHtml(item.Description || '')}</textarea>
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistDone(${checklistId}, this.checked)">
+                    <button onclick="deleteChecklist(${checklistId})">Delete</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+
+        // --- DYNAMIC TEXT FIELDS (Supporting Details) ---
+        function renderTextFields(task) {
+            const container = document.getElementById('text-field-container');
+            container.innerHTML = '';
+            fieldCounter = 1;
+        
+            if (Array.isArray(task.comments)) {
+                task.comments.forEach((comment, idx) => {
+                    const fieldId = fieldCounter++;
+                    const div = document.createElement('div');
+                    div.className = 'dynamic-text-field';
+                    div.id = `text-field-${fieldId}`;
+                    div.innerHTML = `
+                        <textarea placeholder="Enter details here..." onblur="saveDynamicField(${fieldId}, this.value)">${escapeHtml(comment)}</textarea>
+                        <button onclick="deleteDynamicField(${fieldId})">Delete</button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        // --- QUICK REPLIES ---
+        
+
+        // --- HTML ESCAPE ---
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                return ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                })[m];
+            });
+        }
+
+        // --- INITIALIZE ON LOAD ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTaskFromFirestore();
+        });
 
         // --- Core Task Updates ---
         function updateTaskTitle(title) {
@@ -506,7 +558,9 @@
         }
         
         function saveDynamicField(fieldId, content) {
-            console.log(`Field ${fieldId} content updated. (API call to PUT /api/tasks/{taskId}/fields/${fieldId})`);
+            const taskId = getTaskIdFromUrl();
+            const path = `comments.${fieldId-1}`;
+            db.collection('tasks').doc(task_id).update({ [path]: content });
         }
         
         function deleteDynamicField(fieldId) {
@@ -538,8 +592,11 @@
             addNewSubtask(newChecklistId);
         }
         
-        function updateChecklistHeading(checklistId, heading) {
-            console.log(`Checklist ${checklistId} heading updated: ${heading} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId})`);
+        function updateChecklistHeading(id, value) {
+            const taskId = getTaskIdFromUrl();
+            db.collection('tasks').doc(taskId).update({
+                [`info.checklist.${id-1}.Title`]: value
+            });
         }
         
         function deleteChecklist(checklistId) {

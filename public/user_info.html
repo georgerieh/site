@@ -148,7 +148,6 @@
 
     <!-- User Header with Progress -->
     <div class="user-header" id="userHeader">
-      <img src="https://randomuser.me/api/portraits/women/81.jpg" alt="You" class="avatar">
       <div class="username">You</div>
       <div class="progress-container">
         <div class="progress-bar" id="userProgress"></div>
@@ -161,19 +160,17 @@
 
       <div class="stat-row">
         <span class="label">Projects number</span>
-        <span class="value" id="projectsCount">3</span>
+        <span class="value" id="projectsCount"></span>
       </div>
 
       <div class="stat-row">
         <span class="label">Your rating</span>
-        <span class="value rating" id="userRating">
-          9/10
-        </span>
+        <span class="value rating" id="userRating"></span>
       </div>
 
       <div class="stat-row">
         <span class="label">Deadlines to complete</span>
-        <span class="value" id="deadlinesCount">3</span>
+        <span class="value" id="deadlinesCount"></span>
       </div>
     </div>
 
@@ -182,60 +179,89 @@
   <!-- Floating Back Button -->
   <button class="back-btn" onclick="history.back()">Back</button>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <script>
-    // ========================================
-    // API ENDPOINTS — Change these when backend is ready
-    // ========================================
-    const API_BASE = 'https://your-api.example.com'; // Your actual domain
-
-    // GET current logged-in user profile + stats
-    const GET_USER_PROFILE = `${API_BASE}/api/v1/user/me`;
-
-    // Optional: GET user rating details
-    const GET_USER_RATING = `${API_BASE}/api/v1/user/me/rating`;
-
-    // ========================================
-    // Mock data (replace with real API later)
-    // ========================================
-    const mockUserData = {
-      name: "You",
-      avatar: "https://randomuser.me/api/portraits/women/81.jpg",
-      progress: 78,                    // overall completion %
-      projects: 3,
-      rating: "9/10",
-      deadlines: 3
+    const firebaseConfig = {
+      apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+      authDomain: "colabspace-aed91.firebaseapp.com",
+      projectId: "colabspace-aed91",
+      storageBucket: "colabspace-aed91.firebasestorage.app",
+      messagingSenderId: "1096273499808",
+      appId: "1:1096273499808:web:42012f619a3cbced321bc5"
     };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // ========================================
-    // Render User Info
-    // ========================================
-    async function loadUserInfo() {
-      let user;
+    firebase.auth().onAuthStateChanged(async user => {
+      if (user) {
+        const userName = user.displayName || "User";
+        document.querySelector(".username").textContent = `${userName} 👋`;
 
-      try {
-        // Uncomment when API is ready:
-        // const res = await fetch(GET_USER_PROFILE, { credentials: 'include' });
-        // user = await res.json();
+        try {
+          // Get user document from 'users' collection by email
+          const usersSnapshot = await db.collection('users').where('email', '==', user.email).get();
+          if (usersSnapshot.empty) {
+            // No user doc found, clear stats
+            document.getElementById('userProgress').style.width = '0%';
+            document.getElementById('projectsCount').textContent = '0';
+            document.getElementById('deadlinesCount').textContent = '0';
+            document.getElementById('userRating').textContent = 'N/A';
+            return;
+          }
+          const userDoc = usersSnapshot.docs[0];
+          const userId = userDoc.data().id;
 
-        // For now: use mock data
-        user = mockUserData;
+          // Query Firestore tasks collection for this userId
+          const tasksSnapshot = await db.collection('tasks')
+            .where('user_id', '==', userId)
+            .get();
 
-      } catch (err) {
-        console.error("Failed to load user info:", err);
-        user = mockUserData; // fallback
+          let totalTasks = tasksSnapshot.size;
+          let completedTasks = 0;
+          let inProgressTasks = 0;
+
+          tasksSnapshot.forEach(doc => {
+            const task = doc.data();
+            if (task.status === 'inProgress') {
+              inProgressTasks++;
+            } else if (task.status === 'completed') {
+              completedTasks++;
+            }
+          });
+
+          // Calculate progress as completed / total * 100
+          let progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+          // Update DOM with Firestore data
+          document.getElementById('userProgress').style.width = progressPercent + '%';
+          document.getElementById('projectsCount').textContent = totalTasks;
+          document.getElementById('deadlinesCount').textContent = inProgressTasks;
+
+          // Update userRating if available in userDoc
+          const userRating = userDoc.data().rating || "N/A";
+          document.getElementById('userRating').textContent = userRating;
+
+        } catch (err) {
+          // On error, clear or keep previous values silently
+          document.getElementById('userProgress').style.width = '0%';
+          document.getElementById('projectsCount').textContent = '0';
+          document.getElementById('deadlinesCount').textContent = '0';
+          document.getElementById('userRating').textContent = 'N/A';
+        }
+      } else {
+        // Not signed in → keep placeholder or redirect if needed
+        document.querySelector(".username").textContent = "You";
+        document.getElementById('userProgress').style.width = '0%';
+        document.getElementById('projectsCount').textContent = '';
+        document.getElementById('deadlinesCount').textContent = '';
+        document.getElementById('userRating').textContent = '';
       }
-
-      // Update DOM
-      document.querySelector('.avatar').src = user.avatar;
-      document.querySelector('.username').textContent = user.name;
-      document.getElementById('userProgress').style.width = user.progress + '%';
-      document.getElementById('projectsCount').textContent = user.projects;
-      document.getElementById('userRating').innerHTML = user.rating;
-      document.getElementById('deadlinesCount').textContent = user.deadlines;
-    }
-
-    // Load on page open
-    loadUserInfo();
+    });
   </script>
 
 </body>

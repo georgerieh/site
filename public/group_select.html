@@ -112,6 +112,52 @@
       margin: 0 auto 20px;
       border-radius: 3px;
     }
+
+    #teamList {
+      max-width: 340px;
+      margin: 80px auto 20px;
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+      text-align: center;
+      z-index: 100;
+    }
+
+    #teamList h4 {
+      margin-bottom: 16px;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .team-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+    }
+
+    .team-name {
+      font-weight: 500;
+    }
+
+    .join-btn {
+      background: #000;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+
+    .join-btn:hover {
+      background: #333;
+    }
   </style>
 </head>
 <body>
@@ -132,17 +178,108 @@
 
   <div class="navigation-bar"></div>
 
+  <div id="teamList"></div>
+
   <script>
+    async function goToDashboard() {
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+      const projectId = 1; // replace with dynamic project id if needed
+
+      const user = auth.currentUser;
+      if (!user) return alert("User not signed in");
+
+      // Get numeric user_id
+      const userSnap = await db.collection("user").where("email", "==", user.email).get();
+      if (userSnap.empty) return alert("User not found in Firestore");
+      const currentUserId = userSnap.docs[0].data().id;
+
+      // Get project max_number
+      const projectDoc = await db.collection("project").doc(String(projectId)).get();
+      if (!projectDoc.exists) return alert("Project not found");
+      const maxUsers = Number(projectDoc.data().max_number);
+
+      // Get all teams in project
+      const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
+
+      // Check if user is already in any team
+      const userTeam = teamSnap.docs.find(doc => {
+        const team = doc.data();
+        const usersArray = Array.isArray(team.users) ? team.users.map(u => Number(u)) : [];
+        return usersArray.includes(currentUserId);
+      });
+
+      if (userTeam) {
+        // User already in a team, redirect to dashboard
+        window.location.href = "/dashboard.html";
+        return;
+      }
+
+      // Filter available teams (not full and user not already in)
+      let availableTeams = teamSnap.docs.filter(doc => {
+        const team = doc.data();
+        const usersArray = Array.isArray(team.users) ? team.users.map(u => Number(u)) : [];
+        return usersArray.length < maxUsers && !usersArray.includes(currentUserId);
+      });
+
+      if (availableTeams.length > 0) {
+        // Render available teams list
+        const teamListDiv = document.getElementById("teamList");
+        teamListDiv.innerHTML = "<h4>Available Groups to Join</h4>";
+        availableTeams.forEach(doc => {
+          const team = doc.data();
+          const teamId = team.team_id;
+          const usersCount = Array.isArray(team.users) ? team.users.length : 0;
+          const teamItem = document.createElement("div");
+          teamItem.className = "team-item";
+          teamItem.innerHTML = `
+            <span class="team-name">${team.name} (${usersCount}/${maxUsers})</span>
+            <button class="join-btn" onclick="joinTeam(${teamId})">Join</button>
+          `;
+          teamListDiv.appendChild(teamItem);
+        });
+      } else {
+        // No available team, create new one
+        const existingIds = teamSnap.docs.map(doc => doc.data().team_id);
+        const newTeamId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+        const newTeam = {
+          team_id: newTeamId,
+          project_id: projectId,
+          users: [currentUserId],
+          name: "Team " + newTeamId
+        };
+        await db.collection("team").doc(String(newTeamId)).set(newTeam);
+
+        // Redirect
+        window.location.href = "/dashboard.html";
+      }
+    }
+
+    async function joinTeam(teamId) {
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+      const user = auth.currentUser;
+      if (!user) return alert("User not signed in");
+
+      // Get numeric user_id
+      const userSnap = await db.collection("user").where("email", "==", user.email).get();
+      if (userSnap.empty) return alert("User not found in Firestore");
+      const currentUserId = userSnap.docs[0].data().id;
+
+      const teamRef = db.collection("team").doc(String(teamId));
+      await teamRef.update({
+        users: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+      });
+
+      window.location.href = "/dashboard.html";
+    }
+
     function goToSelectGroup() {
       window.location.href = "/group_select.html";
     }
 
     function goToGroupChoice() {
       window.location.href = "/group_choices.html";
-    }
-
-    function goToDashboard() {
-      window.location.href = "/dashboard.html";  // or just close / go back if you prefer
     }
   </script>
 </body>
