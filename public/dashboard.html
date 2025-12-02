@@ -33,12 +33,22 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       margin-bottom: 24px;
     }
+    /* Updated menu-item to ensure the link covers the whole area cleanly */
     .menu-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 20px;
+      padding: 0 20px; /* Adjust padding to be around the link */
       font-size: 17px;
+    }
+    .menu-link { /* New style for the anchor tag */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 12px 0; /* Add vertical padding here */
+        text-decoration: none; /* Remove underline */
+        color: inherit; /* Keep text color the same */
     }
     .menu-item .star {
       font-size: 20px;
@@ -147,36 +157,42 @@
 
   <div class="menu-card">
     <div class="menu-item">
-      <div style="display:flex;align-items:center;">
-        <span class="star">★</span>
-        <div>
-          <div>Team Info</div>
-          <div class="desc">Menu description.</div>
-        </div>
-      </div>
-      <span>→</span>
+        <a href="/project_info_example.html" class="menu-link">
+          <div style="display:flex;align-items:center;">
+            <span class="star">★</span>
+            <div>
+              <div>Team Info</div>
+              <div class="desc">Menu description.</div>
+            </div>
+          </div>
+          <span>→</span>
+        </a>
     </div>
 
     <div class="menu-item">
-      <div style="display:flex;align-items:center;">
-        <span class="star">★</span>
-        <div>
-          <div>Project Info</div>
-          <div class="desc">Menu description.</div>
-        </div>
-      </div>
-      <span>→</span>
+        <a href="project_info_example.html" class="menu-link">
+          <div style="display:flex;align-items:center;">
+            <span class="star">★</span>
+            <div>
+              <div>Project Info</div>
+              <div class="desc">Menu description.</div>
+            </div>
+          </div>
+          <span>→</span>
+        </a>
     </div>
 
     <div class="menu-item">
-      <div style="display:flex;align-items:center;">
-        <span class="star">★</span>
-        <div>
-          <div>Discussion</div>
-          <div class="desc">Menu description.</div>
-        </div>
-      </div>
-      <span>→</span>
+        <a href="discussion_example.html" class="menu-link">
+          <div style="display:flex;align-items:center;">
+            <span class="star">★</span>
+            <div>
+              <div>Discussion</div>
+              <div class="desc">Menu description.</div>
+            </div>
+          </div>
+          <span>→</span>
+        </a>
     </div>
   </div>
 
@@ -188,7 +204,6 @@
     </div>
   </div>
 
-  <!-- Task 1 -->
   <div class="task-card">
     <div class="task-header">
       <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User">
@@ -201,7 +216,6 @@
     <button class="btn btn-done">Mark Done</button>
   </div>
 
-  <!-- Task 2 -->
   <div class="task-card">
     <div class="task-header">
       <div style="display:flex;align-items:center;">
@@ -216,7 +230,6 @@
     <button class="btn btn-done">Mark Done</button>
   </div>
 
-  <!-- Floating back button -->
   <div class="back-btn" onclick="history.back()">↩</div>
 
 </body>

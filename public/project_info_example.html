@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Task List</title>
+    <style>
+        /* Base Reset and Mobile Optimization */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f5; /* Light background */
+        }
+        .container {
+            padding: 10px;
+        }
+
+        /* Task Card Styling */
+        .task-card {
+            background-color: white;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #ddd;
+        }
+
+        .task-info {
+            flex-grow: 1;
+            padding-right: 15px;
+        }
+
+        .task-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .task-info p {
+            margin: 2px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        /* Arrow Styling (Kept as requested) */
+        .arrow {
+            font-size: 1.8em;
+            color: #555; /* A neutral color */
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* Progress Bar Styling (Simplified) */
+        .progress-bar {
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #7a63c6; /* A purple color matching the visual */
+            border-radius: 3px;
+        }
+
+        /* Footer Navigation (Kept as requested) */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 15px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .footer-button {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .back-arrow {
+            font-size: 1.5em;
+            color: black;
+            padding: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .your-tasks {
+            background-color: #333;
+            color: white;
+            flex-grow: 1; /* Allows it to take up more space */
+        }
+
+        .all-tasks {
+            background-color: transparent;
+            color: #555;
+            flex-grow: 1; /* Allows it to take up more space */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="task-card">
+            <div class="task-info">
+                <h3>Task 1</h3>
+                <p>Deadline: 17/12/25</p>
+                <p>Status: 100% Done</p>
+            </div>
+            <span class="arrow">&rarr;</span>
+        </div>
+
+        <div class="task-card">
+            <div class="task-info">
+                <h3>Task 2</h3>
+                <p>Deadline: 19/12/25</p>
+                <p>Status: 45% Done</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 45%;"></div>
+                </div>
+            </div>
+            <span class="arrow">&rarr;</span>
+        </div>
+
+        <div class="task-card">
+            <div class="task-info">
+                <h3>Task 3</h3>
+                <p>Deadline: 19/12/25</p>
+                <p>Status: 15% Done</p>
+            </div>
+            <span class="arrow">&rarr;</span>
+        </div>
+
+    </div>
+
+    <div class="footer-nav">
+        <span class="back-arrow">&larr;</span>
+        <div class="footer-button your-tasks">Your tasks</div>
+        <div class="footer-button all-tasks">All tasks</div>
+    </div>
+
+</body>
+</html>
