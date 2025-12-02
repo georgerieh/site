@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Join Class</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f5f5f5;
+    }
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: white;
+    }
+    .status-bar {
+      height: 44px;
+      background-color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 15px;
+      color: #000;
+      position: relative;
+    }
+    .time { font-weight: 500; }
+    .icons {
+      display: flex;
+      gap: 8px;
+      font-size: 18px;
+    }
+    .camera-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 30px;
+      background-color: #000;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .qr-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background-color: #f8f9fa;
+    }
+    .qr-frame {
+      width: 280px;
+      height: 280px;
+      border: 12px solid #6c5ce7;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      background-color: #000;
+    }
+    .qr-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .or-section {
+      margin: 40px 0 20px;
+      text-align: center;
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+    }
+    .or-text {
+      background-color: white;
+      padding: 0 16px;
+      color: #666;
+      font-size: 14px;
+    }
+    .divider {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: #ddd;
+      z-index: -1;
+    }
+
+    .input-container {
+      width: 100%;
+      max-width: 320px;
+      padding: 0 20px;
+    }
+    .text-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 17px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background-color: white;
+      box-sizing: border-box;
+    }
+    .text-input::placeholder {
+      color: #aaa;
+    }
+
+    .bottom-nav {
+      height: 80px;
+      background-color: white;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="time">9:30</div>
+      <div class="icons">
+        <span>📶</span>
+        <span>📶</span>
+        <span>🔋</span>
+      </div>
+      <div class="camera-notch"></div>
+    </div>
+
+    <!-- QR Scanner Area -->
+    <div class="qr-container">
+      <div class="qr-frame">
+        <!-- Replace with your actual QR code image or use a placeholder -->
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=SampleClassCode123" alt="Scan QR Code">
+      </div>
+    </div>
+
+    <!-- OR Divider -->
+    <div class="or-section">
+      <div class="divider"></div>
+      <span class="or-text">or</span>
+    </div>
+
+    <!-- Manual Code Input -->
+    <div class="input-container">
+      <input type="text" class="text-input" placeholder="Enter class code" autocomplete="off">
+    </div>
+
+    <!-- Bottom safe area / navigation -->
+    <div class="bottom-nav"></div>
+  </div>
+</body>
+</html>
