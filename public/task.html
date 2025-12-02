@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task 1 Detail</title>
+    <title>Task 1 Detail (Enhanced)</title>
     <style>
         /* Base Styling */
         body {
@@ -46,49 +46,64 @@
             font-weight: bold;
         }
 
-        .info-icon, .calendar-icon {
+        .info-icon {
             font-size: 1.2em;
             color: #555;
             cursor: pointer;
         }
-        
+
         /* Editable Task Details */
-        .task-details input[type="text"] {
-            border: none;
-            width: 100%;
-            font-size: 1em;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
         .task-details {
             font-size: 0.9em;
             color: #555;
             margin-bottom: 15px;
         }
         
-        /* Progress Bar */
-        .progress-bar {
-            height: 8px;
-            background-color: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 5px;
-            margin-bottom: 15px;
+        /* New: Deadline input styling */
+        .deadline-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .deadline-container label {
+            margin-right: 5px;
+            color: #555;
         }
 
-        .progress-fill {
-            height: 100%;
-            background-color: #7a63c6;
-            border-radius: 4px;
-            width: 100%; /* Example: 100% for done */
+        .deadline-container input[type="date"] {
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            flex-grow: 1; /* Makes the date input responsive */
+        }
+        
+        /* New: Responsibility Button */
+        .responsible-action {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+        
+        .responsible-action button {
+            padding: 8px 15px;
+            border: none;
+            background-color: #6200ea; /* Purple color */
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8em;
         }
 
-        /* Action Buttons */
+        /* Action Buttons (Archive) */
         .action-buttons {
             display: flex;
             justify-content: flex-end;
-            margin-top: -10px; /* Align button closer to the progress bar */
+            margin-top: 5px;
         }
 
         .action-buttons button {
@@ -102,8 +117,24 @@
             font-size: 0.8em;
         }
 
-        /* Subtask List */
-        .subtask-list {
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #7a63c6;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        /* Subtask & Text Block Containers */
+        .section-card {
             background-color: white;
             border-radius: 12px;
             padding: 10px 15px;
@@ -111,6 +142,7 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
+        /* Subtask List Items */
         .subtask-item {
             display: flex;
             align-items: center;
@@ -118,9 +150,13 @@
             padding: 8px 0;
             border-bottom: 1px solid #eee;
         }
-
-        .subtask-item:last-child {
-            border-bottom: none;
+        
+        .subtask-item input[type="text"] {
+            border: none;
+            font-weight: 500;
+            margin: 0;
+            padding: 0;
+            flex-grow: 1;
         }
 
         .subtask-item input[type="checkbox"] {
@@ -129,25 +165,20 @@
             height: 20px;
             accent-color: #7a63c6;
         }
-        
+
         .subtask-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-        }
-
-        .subtask-content div:first-child {
-            font-weight: 500;
-            color: #333;
         }
         
         .subtask-content div:last-child {
             font-size: 0.8em;
             color: #777;
         }
-        
-        /* Add New Detail */
-        .add-detail {
+
+        /* Add New Button Styling */
+        .add-new-btn {
             display: flex;
             align-items: center;
             padding: 10px 0;
@@ -156,40 +187,29 @@
             cursor: pointer;
         }
         
-        .add-detail span {
+        .add-new-btn span {
             margin-right: 8px;
             font-size: 1.5em;
         }
 
-        /* Notes Section */
-        .notes-section {
-            margin-bottom: 20px;
-        }
-        
-        .notes-section p {
-            font-weight: bold;
-            color: #333;
-            margin: 0 0 10px 0;
+        /* Dynamic Text Fields */
+        .dynamic-text-field {
+            padding: 10px 0;
         }
 
-        .notes-box {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .notes-box textarea {
+        .dynamic-text-field textarea {
             width: 100%;
-            height: 80px;
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 12px;
+            border-radius: 8px;
             box-sizing: border-box;
             font-size: 0.9em;
             resize: vertical;
-            color: #333;
+            min-height: 40px;
         }
-        
+
+        /* Notes Section - uses section-card styling */
+
         /* Global Action Buttons */
         .global-actions {
             display: flex;
@@ -257,62 +277,72 @@
         <div class="task-title-row">
             <h3>
                 <span class="info-icon">ⓘ</span>
-                <input type="text" value="Task 1" style="font-size: 1em; font-weight: bold; padding: 0; border: none; width: auto; margin: 0; display: inline; color: black;">
+                <input type="text" value="Task 1" style="font-size: 1em; font-weight: bold; padding: 0; border: none; width: auto; margin: 0; display: inline; color: black;" onblur="updateTaskTitle(this.value)">
                 <span>#Done</span>
             </h3>
-            <span class="calendar-icon">📅</span> </div>
+        </div>
 
         <div class="task-details">
-            Deadline: <input type="text" value="is not set" placeholder="Set deadline (e.g., 17/12/25)" style="display: inline; width: 50%;">
+            <div class="deadline-container">
+                <label for="deadline-input">Deadline:</label>
+                <input type="date" id="deadline-input" value="2025-12-17" onchange="updateDeadline(this.value)">
+            </div>
             <p>Status: 100% Done</p>
         </div>
 
         <div class="progress-bar">
             <div class="progress-fill"></div>
         </div>
+        
+        <div class="responsible-action">
+            <button onclick="setResponsible()">Select me as responsible</button>
+            </div>
 
         <div class="action-buttons">
             <button onclick="archiveTask()">Mark archive?</button>
             </div>
     </div>
 
-    <div class="subtask-list">
-        <div class="subtask-item">
-            <input type="checkbox" id="subtask1" checked onclick="toggleSubtask(1)">
-            <div class="subtask-content">
-                <input type="text" value="Create Google Doc" style="margin: 0; padding: 0; border: none; font-weight: 500;">
-                <div>Description</div>
+    <div id="checklist-container">
+        <div class="section-card">
+            <h4 style="margin-top: 0;">Main Checklist</h4>
+            <div id="subtask-list-1">
+                <div class="subtask-item">
+                    <input type="checkbox" checked onclick="toggleSubtask(1, 1)">
+                    <div class="subtask-content">
+                        <input type="text" value="Create Google Doc" onblur="updateSubtaskTitle(1, 1, this.value)">
+                        <div>Description</div>
+                    </div>
+                </div>
+                <div class="subtask-item">
+                    <input type="checkbox" checked onclick="toggleSubtask(1, 2)">
+                    <div class="subtask-content">
+                        <input type="text" value="Read Something" onblur="updateSubtaskTitle(1, 2, this.value)">
+                        <div>Description</div>
+                    </div>
+                </div>
             </div>
-            <span class="calendar-icon">📅</span> </div>
-        <div class="subtask-item">
-            <input type="checkbox" id="subtask2" checked onclick="toggleSubtask(2)">
-            <div class="subtask-content">
-                <input type="text" value="Read Something" style="margin: 0; padding: 0; border: none; font-weight: 500;">
-                <div>Description</div>
-            </div>
-            <span class="calendar-icon">📅</span>
+            <div class="add-new-btn" onclick="addNewSubtask(1)">
+                <span>+</span> Add new detail
+                </div>
+        </div>
+        </div>
+    
+    <div class="add-new-btn" onclick="addNewChecklist()">
+        <span>+</span> Add new checklist
         </div>
 
-        <div class="subtask-item">
-            <input type="checkbox" id="subtask3" checked onclick="toggleSubtask(3)">
-            <div class="subtask-content">
-                <input type="text" value="Share file" style="margin: 0; padding: 0; border: none; font-weight: 500;">
-                <div>Description</div>
-            </div>
-            <span class="calendar-icon">📅</span>
-        </div>
-
-        <div class="add-detail" onclick="addNewSubtask()">
-            <span>+</span> Add new detail
+    <h4 style="margin-top: 0; margin-bottom: 10px;">Supporting Details</h4>
+    <div id="text-field-container">
+        <div class="section-card dynamic-text-field">
+            <p style="font-weight: bold; margin: 0 0 5px 0;">Important Notes (Editable)</p>
+            <textarea placeholder="The link to the file is https://docs.google.c..." onblur="saveDynamicField(1, this.value)">The link to the file is https://docs.google.c...</textarea>
             </div>
     </div>
     
-    <div class="notes-section">
-        <p>Got important notes?</p>
-        <div class="notes-box">
-            <textarea placeholder="The link to the file is https://docs.google.c..." onblur="saveNotes()">The link to the file is https://docs.google.c...</textarea>
-            </div>
-    </div>
+    <div class="add-new-btn" onclick="addDynamicTextField()">
+        <span>+</span> Add new text field
+        </div>
     
     <div class="global-actions">
         <button class="notify-btn" onclick="notifyEveryone()">Notify everyone</button>
@@ -328,20 +358,89 @@
         <div class="back-btn" onclick="history.back()">&#8592;</div> </div>
     
     <script>
-        // Placeholder JavaScript functions to demonstrate clickability
+        let checklistCounter = 2; // Starts from 2 since 1 is pre-existing
+        let fieldCounter = 2; // Starts from 2 since 1 is pre-existing
+
+        // --- Core Task Updates ---
+        function updateTaskTitle(title) {
+            console.log(`Task title updated to: ${title} (API call to PUT /api/tasks/{taskId})`);
+        }
+        function updateDeadline(date) {
+            console.log(`Deadline set to: ${date} (API call to PUT /api/tasks/{taskId})`);
+        }
+        function setResponsible() {
+            console.log('User set as responsible. (API call to POST /api/tasks/{taskId}/responsible)');
+        }
         function archiveTask() {
             console.log('Task archived! (API call to POST /api/tasks/{taskId}/archive)');
         }
-        function toggleSubtask(id) {
-            console.log(`Subtask ${id} status toggled! (API call to PUT /api/tasks/{taskId}/subtasks/${id})`);
+        
+        // --- Dynamic Text Fields ---
+        function addDynamicTextField() {
+            const container = document.getElementById('text-field-container');
+            const newFieldId = fieldCounter++;
+            
+            const newCard = document.createElement('div');
+            newCard.className = 'section-card dynamic-text-field';
+            newCard.innerHTML = `
+                <p style="font-weight: bold; margin: 0 0 5px 0;">New Text Field ${newFieldId}</p>
+                <textarea placeholder="Enter details here..." onblur="saveDynamicField(${newFieldId}, this.value)"></textarea>
+            `;
+            container.appendChild(newCard);
+            console.log(`New text field added. (API call to POST /api/tasks/{taskId}/fields)`);
         }
-        function addNewSubtask() {
-            console.log('Adding new subtask... (API call to POST /api/tasks/{taskId}/subtasks)');
+        
+        function saveDynamicField(fieldId, content) {
+            console.log(`Field ${fieldId} content updated to: "${content}" (API call to PUT /api/tasks/{taskId}/fields/${fieldId})`);
         }
-        function saveNotes() {
-            const notes = document.querySelector('.notes-box textarea').value;
-            console.log(`Notes saved: "${notes}" (API call to PUT /api/tasks/{taskId}/notes)`);
+
+        // --- Dynamic Checklists ---
+        function addNewChecklist() {
+            const container = document.getElementById('checklist-container');
+            const newChecklistId = checklistCounter++;
+            
+            const newCard = document.createElement('div');
+            newCard.className = 'section-card';
+            newCard.innerHTML = `
+                <h4 style="margin-top: 0;">New Checklist ${newChecklistId}</h4>
+                <div id="subtask-list-${newChecklistId}">
+                    </div>
+                <div class="add-new-btn" onclick="addNewSubtask(${newChecklistId})">
+                    <span>+</span> Add new detail
+                </div>
+            `;
+            container.appendChild(newCard);
+            console.log(`New checklist ${newChecklistId} added. (API call to POST /api/tasks/{taskId}/checklists)`);
+            addNewSubtask(newChecklistId); // Add an initial subtask
         }
+        
+        function addNewSubtask(checklistId) {
+            const list = document.getElementById(`subtask-list-${checklistId}`);
+            // Simple method to find the next subtask ID based on current children count
+            const subtaskId = list.children.length + 1; 
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'subtask-item';
+            newItem.innerHTML = `
+                <input type="checkbox" onclick="toggleSubtask(${checklistId}, ${subtaskId})">
+                <div class="subtask-content">
+                    <input type="text" value="" placeholder="New Subtask" onblur="updateSubtaskTitle(${checklistId}, ${subtaskId}, this.value)">
+                    <div>Description (optional)</div>
+                </div>
+            `;
+            list.appendChild(newItem);
+            console.log(`New subtask added to checklist ${checklistId}. (API call to POST /api/tasks/{taskId}/checklists/${checklistId}/subtasks)`);
+        }
+        
+        function toggleSubtask(checklistId, subtaskId) {
+            console.log(`Checklist ${checklistId}, Subtask ${subtaskId} status toggled! (API call to PUT /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+        }
+        
+        function updateSubtaskTitle(checklistId, subtaskId, title) {
+            console.log(`Checklist ${checklistId}, Subtask ${subtaskId} title updated to: ${title} (API call to PUT /api/tasks/{taskId}/checklists/${checklistId}/subtasks/${subtaskId})`);
+        }
+
+        // --- Global Actions (Same as previous) ---
         function notifyEveryone() {
             console.log('Notification sent to everyone! (API call to POST /api/tasks/{taskId}/notify)');
         }
