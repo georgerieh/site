@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 1 Detail</title>
+    <style>
+        /* Base Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f0f0f5;
+        }
+
+        /* Task Header */
+        .task-header-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .task-title-row h3 {
+            font-size: 1.5em;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .task-title-row h3 span {
+            margin-left: 8px;
+            background-color: #eee;
+            color: #555;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.6em;
+            font-weight: bold;
+        }
+
+        .info-icon, .calendar-icon {
+            font-size: 1.2em;
+            color: #555;
+            cursor: pointer;
+        }
+        
+        /* Editable Task Details */
+        .task-details input[type="text"] {
+            border: none;
+            width: 100%;
+            font-size: 1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .task-details {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #7a63c6;
+            border-radius: 4px;
+            width: 100%; /* Example: 100% for done */
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -10px; /* Align button closer to the progress bar */
+        }
+
+        .action-buttons button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            color: #555;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        /* Subtask List */
+        .subtask-list {
+            background-color: white;
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .subtask-item:last-child {
+            border-bottom: none;
+        }
+
+        .subtask-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            accent-color: #7a63c6;
+        }
+        
+        .subtask-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .subtask-content div:first-child {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .subtask-content div:last-child {
+            font-size: 0.8em;
+            color: #777;
+        }
+        
+        /* Add New Detail */
+        .add-detail {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            color: #7a63c6;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .add-detail span {
+            margin-right: 8px;
+            font-size: 1.5em;
+        }
+
+        /* Notes Section */
+        .notes-section {
+            margin-bottom: 20px;
+        }
+        
+        .notes-section p {
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+
+        .notes-box {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .notes-box textarea {
+            width: 100%;
+            height: 80px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 0.9em;
+            resize: vertical;
+            color: #333;
+        }
+        
+        /* Global Action Buttons */
+        .global-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .global-actions button {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 0.9em;
+        }
+        
+        .global-actions .notify-btn {
+            background-color: #6200ea;
+            color: white;
+        }
+        
+        .global-actions .discuss-btn {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        
+        /* Quick Replies/Inputs */
+        .quick-reply input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-size: 0.9em;
+            background-color: white;
+        }
+        
+        /* Footer Navigation */
+        .footer-nav {
+            display: flex;
+            justify-content: flex-start;
+            padding-top: 15px;
+        }
+
+        .back-btn {
+            width: 50px;
+            height: 50px;
+            background-color: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="task-header-card">
+        <div class="task-title-row">
+            <h3>
+                <span class="info-icon">ⓘ</span>
+                <input type="text" value="Task 1" style="font-size: 1em; font-weight: bold; padding: 0; border: none; width: auto; margin: 0; display: inline; color: black;">
+                <span>#Done</span>
+            </h3>
+            <span class="calendar-icon">📅</span> </div>
+
+        <div class="task-details">
+            Deadline: <input type="text" value="is not set" placeholder="Set deadline (e.g., 17/12/25)" style="display: inline; width: 50%;">
+            <p>Status: 100% Done</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <div class="action-buttons">
+            <button onclick="archiveTask()">Mark archive?</button>
+            </div>
+    </div>
+
+    <div class="subtask-list">
+        <div class="subtask-item">
+            <input type="checkbox" id="subtask1" checked onclick="toggleSubtask(1)">
+            <div class="subtask-content">
+                <input type="text" value="Create Google Doc" style="margin: 0; padding: 0; border: none; font-weight: 500;">
+                <div>Description</div>
+            </div>
+            <span class="calendar-icon">📅</span> </div>
+        <div class="subtask-item">
+            <input type="checkbox" id="subtask2" checked onclick="toggleSubtask(2)">
+            <div class="subtask-content">
+                <input type="text" value="Read Something" style="margin: 0; padding: 0; border: none; font-weight: 500;">
+                <div>Description</div>
+            </div>
+            <span class="calendar-icon">📅</span>
+        </div>
+
+        <div class="subtask-item">
+            <input type="checkbox" id="subtask3" checked onclick="toggleSubtask(3)">
+            <div class="subtask-content">
+                <input type="text" value="Share file" style="margin: 0; padding: 0; border: none; font-weight: 500;">
+                <div>Description</div>
+            </div>
+            <span class="calendar-icon">📅</span>
+        </div>
+
+        <div class="add-detail" onclick="addNewSubtask()">
+            <span>+</span> Add new detail
+            </div>
+    </div>
+    
+    <div class="notes-section">
+        <p>Got important notes?</p>
+        <div class="notes-box">
+            <textarea placeholder="The link to the file is https://docs.google.c..." onblur="saveNotes()">The link to the file is https://docs.google.c...</textarea>
+            </div>
+    </div>
+    
+    <div class="global-actions">
+        <button class="notify-btn" onclick="notifyEveryone()">Notify everyone</button>
+        <button class="discuss-btn" onclick="openChat()">Discuss in chat</button>
+        </div>
+    
+    <div class="quick-reply">
+        <input type="text" placeholder="I need your help on..." onchange="sendQuickReply(this.value)">
+        <input type="text" placeholder="How this is even real" onchange="sendQuickReply(this.value)">
+        </div>
+
+    <div class="footer-nav">
+        <div class="back-btn" onclick="history.back()">&#8592;</div> </div>
+    
+    <script>
+        // Placeholder JavaScript functions to demonstrate clickability
+        function archiveTask() {
+            console.log('Task archived! (API call to POST /api/tasks/{taskId}/archive)');
+        }
+        function toggleSubtask(id) {
+            console.log(`Subtask ${id} status toggled! (API call to PUT /api/tasks/{taskId}/subtasks/${id})`);
+        }
+        function addNewSubtask() {
+            console.log('Adding new subtask... (API call to POST /api/tasks/{taskId}/subtasks)');
+        }
+        function saveNotes() {
+            const notes = document.querySelector('.notes-box textarea').value;
+            console.log(`Notes saved: "${notes}" (API call to PUT /api/tasks/{taskId}/notes)`);
+        }
+        function notifyEveryone() {
+            console.log('Notification sent to everyone! (API call to POST /api/tasks/{taskId}/notify)');
+        }
+        function openChat() {
+            console.log('Opening task chat... (API call to GET /api/tasks/{taskId}/chat)');
+        }
+        function sendQuickReply(message) {
+            console.log(`Quick reply sent: "${message}" (API call to POST /api/tasks/{taskId}/messages)`);
+        }
+    </script>
+
+</body>
+</html>
