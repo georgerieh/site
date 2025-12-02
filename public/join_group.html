@@ -1,144 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Class Project Join</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: #f5f5f5;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Project Join</title>
+<!-- okkwod -->
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;     /* centers main content vertically */
+  align-items: center;         /* centers horizontally */
+  background: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
 
-    .dialog {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      width: 90%;
-      max-width: 320px;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-      text-align: center;
-      z-index: 100;
-    }
+/* Centered dialog box */
+.dialog {
+  background: white;
+  width: 100%;
+  max-width: 320px;
+  border-radius: 16px;
+  padding: 28px 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  text-align: center;
+  position: relative;
+  margin-bottom: 40px;
+}
 
-    .dialog .close {
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      font-size: 24px;
-      color: #666;
-      cursor: pointer;
-    }
+.dialog .close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 26px;
+  color: #666;
+  cursor: pointer;
+}
 
-    .dialog h3 {
-      margin: 0 0 24px 0;
-      font-size: 18px;
-      font-weight: 500;
-      line-height: 1.4;
-    }
+.dialog h3 {
+  margin-top: 10px;
+  margin-bottom: 28px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+}
 
-    .dialog-buttons {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin-top: 20px;
-    }
+/* Buttons inside dialog */
+.dialog-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
 
-    button {
-      padding: 10px 24px;
-      border: none;
-      border-radius: 20px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      min-width: 80px;
-    }
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 22px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 96px;
+}
 
-    .btn-no {
-      background: #e0e0e0;
-      color: #333;
-    }
+.btn-no {
+  background: #e0e0e0;
+  color: #333;
+}
 
-    .btn-yes {
-      background: #000;
-      color: white;
-    }
+.btn-yes {
+  background: #000;
+  color: white;
+}
 
-    .bottom-actions {
-      margin-top: auto;
-      padding: 24px 20px;
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
+/* Bottom section */
+.bottom-actions {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
 
-    .choice-btn {
-      background: #000;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 25px;
-      font-weight: 600;
-    }
+.choice-btn {
+  background: #000;
+  color: white;
+  padding: 14px 20px;
+  border-radius: 25px;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
 
-    .random-btn {
-      background: transparent;
-      border: none;
-      color: #333;
-      font-size: 16px;
-      cursor: pointer;
-    }
+.random-btn {
+  background: transparent;
+  border: none;
+  color: #333;
+  font-size: 16px;
+  cursor: pointer;
+}
 
-    .navigation-bar {
-      height: 4px;
-      background: #000;
-      width: 134px;
-      margin: 20px auto;
-      border-radius: 2px;
-    }
-  </style>
+/* Navigation bar */
+.navigation-bar {
+  height: 4px;
+  background: #000;
+  width: 140px;
+  margin-top: 20px;
+  border-radius: 2px;
+}
+
+/* Extra small devices (super tiny phones) */
+@media (max-height: 700px) {
+  body {
+    justify-content: flex-start;
+    padding-top: 40px;
+  }
+}
+</style>
 </head>
+
 <body>
 
-  <!-- Main dialog -->
-  <div class="dialog" id="joinDialog">
-    <div class="close" onclick="goToDashboard()">×</div>
-    <h3>Do you want to join new class project?</h3>
-    <div class="dialog-buttons">
-      <button class="btn-no" onclick="goToDashboard()">No</button>
-      <button class="btn-yes" onclick="goToSelectGroup()">Yes</button>
-    </div>
+<!-- Main dialog -->
+<div class="dialog" id="joinDialog">
+  <div class="close" onclick="goToDashboard()">×</div>
+  <h3>Do you want to join new class project?</h3>
+  <div class="dialog-buttons">
+    <button class="btn-no" onclick="goToDashboard()">No</button>
+    <button class="btn-yes" onclick="goToSelectGroup()">Yes</button>
   </div>
+</div>
 
-  <!-- Bottom action buttons -->
-  <div class="bottom-actions">
-    <button class="choice-btn" onclick="goToSelectGroup()">Choice is on</button>
-    <button class="random-btn" onclick="goToDashboard()">Random Choice</button>
-  </div>
+<!-- Bottom actions -->
+<div class="bottom-actions">
+  <button class="choice-btn" onclick="goToSelectGroup()">Choice is on</button>
+  <button class="random-btn" onclick="goToDashboard()">Random Choice</button>
+</div>
 
-  <div class="navigation-bar"></div>
+<div class="navigation-bar"></div>
 
-  <script>
-    // Yes (in dialog) → select group page
-    function goToSelectGroup() {
-      window.location.href = "select_group_page.html";
-    }
+<script>
+function goToSelectGroup() {
+  window.location.href = "/select_group_page.html";
+}
 
-    // No (dialog), Close (×), "Random Choice" → dashboard
-    function goToDashboard() {
-      window.location.href = "dashboard.html";
-    }
-
-    // "Choice is on" button → select group page
-    // Already handled by onclick in HTML
-  </script>
+function goToDashboard() {
+  window.location.href = "/dashboard.html";
+}
+</script>
 
 </body>
 </html>
