@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>User Info</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fafafa;
+      min-height: 100vh;
+      padding-top: 50px;
+      padding-bottom: 100px;
+      color: #202124;
+    }
+
+    /* Android Status Bar */
+    .status-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 50px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-weight: 600;
+      font-size: 15px;
+      z-index: 1000;
+      border-bottom: 1px solid #eee;
+    }
+
+    .page-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 20px 0 28px;
+    }
+
+    .container { padding: 0 16px; }
+
+    /* User Header Card */
+    .user-header {
+      background: white;
+      border-radius: 20px;
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #e8def8;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
+    }
+
+    .username {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      height: 12px;
+      background: #e8def8;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 0 8px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #9c6ade, #b8a1e0);
+      border-radius: 6px;
+      width: 0%;
+      transition: width 0.8s ease;
+    }
+
+    /* Stats Card */
+    .stats-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 8px 0 20px;
+      color: #5f6368;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 16px;
+    }
+    .stat-row:last-child { border-bottom: none; }
+
+    .label {
+      color: #5f6368;
+    }
+    .value {
+      font-weight: 600;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Back Button */
+    .back-btn {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 56px;
+      background: white;
+      border: 1px solid #dadce0;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-size: 28px;
+      color: #5f6368;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="page-title">User Info</h1>
+
+  <div class="container">
+
+    <!-- User Header with Progress -->
+    <div class="user-header" id="userHeader">
+      <img src="https://randomuser.me/api/portraits/women/81.jpg" alt="You" class="avatar">
+      <div class="username">You</div>
+      <div class="progress-container">
+        <div class="progress-bar" id="userProgress"></div>
+      </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="stats-card">
+      <div class="section-title">Your situation</div>
+
+      <div class="stat-row">
+        <span class="label">Projects number</span>
+        <span class="value" id="projectsCount">3</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="label">Your rating</span>
+        <span class="value rating" id="userRating">
+          9/10
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span class="label">Deadlines to complete</span>
+        <span class="value" id="deadlinesCount">3</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Floating Back Button -->
+  <button class="back-btn" onclick="history.back()">Back</button>
+
+  <script>
+    // ========================================
+    // API ENDPOINTS — Change these when backend is ready
+    // ========================================
+    const API_BASE = 'https://your-api.example.com'; // Your actual domain
+
+    // GET current logged-in user profile + stats
+    const GET_USER_PROFILE = `${API_BASE}/api/v1/user/me`;
+
+    // Optional: GET user rating details
+    const GET_USER_RATING = `${API_BASE}/api/v1/user/me/rating`;
+
+    // ========================================
+    // Mock data (replace with real API later)
+    // ========================================
+    const mockUserData = {
+      name: "You",
+      avatar: "https://randomuser.me/api/portraits/women/81.jpg",
+      progress: 78,                    // overall completion %
+      projects: 3,
+      rating: "9/10",
+      deadlines: 3
+    };
+
+    // ========================================
+    // Render User Info
+    // ========================================
+    async function loadUserInfo() {
+      let user;
+
+      try {
+        // Uncomment when API is ready:
+        // const res = await fetch(GET_USER_PROFILE, { credentials: 'include' });
+        // user = await res.json();
+
+        // For now: use mock data
+        user = mockUserData;
+
+      } catch (err) {
+        console.error("Failed to load user info:", err);
+        user = mockUserData; // fallback
+      }
+
+      // Update DOM
+      document.querySelector('.avatar').src = user.avatar;
+      document.querySelector('.username').textContent = user.name;
+      document.getElementById('userProgress').style.width = user.progress + '%';
+      document.getElementById('projectsCount').textContent = user.projects;
+      document.getElementById('userRating').innerHTML = user.rating;
+      document.getElementById('deadlinesCount').textContent = user.deadlines;
+    }
+
+    // Load on page open
+    loadUserInfo();
+  </script>
+
+</body>
+</html>
