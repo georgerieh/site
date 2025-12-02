@@ -81,13 +81,13 @@
   <div id="login-container">
     <h3>Login</h3>
     
-    <input id="email" placeholder="Email" type="email" required />
+    <!-- <input id="email" placeholder="Email" type="email" required />
     <input id="password" placeholder="Password" type="password" required />
     
-    <button onclick="login()">Login</button>
+    <button onclick="login()">Login</button> -->
     
     <p id="message"></p>
-    
+    <button onclick="googleLogin()">Sign in with Google</button>
     <div class="forgot">
       <a href="#">Forgot password?</a>
     </div>
@@ -106,6 +106,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     function login() {
+
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
       if (!email || !password) {
@@ -117,7 +118,7 @@
         .then((userCredential) => {
           document.getElementById("message").innerText = "Logged in successfully!";
           // Redirect to your protected page
-          window.location.href = "/dashboard.html";  // change to your actual page
+          window.location.href = "/index.html";  // change to your actual page
         })
         .catch((error) => {
           document.getElementById("message").innerText = error.message;
@@ -127,7 +128,20 @@
     document.getElementById("password").addEventListener("keypress", function(e) {
       if (e.key === "Enter") login();
     });
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+  
+      firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+          document.getElementById("message").innerText = "Logged in!";
+          window.location.href = "/join_group.html"; // your redirect
+        })
+        .catch((error) => {
+          document.getElementById("message").innerText = error.message;
+        });
+    }
   </script>
+  
 </body>
 </html>
 
