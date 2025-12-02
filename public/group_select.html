@@ -121,7 +121,7 @@
     <h3>Do you want to join new class project?</h3>
     <div class="dialog-buttons">
       <button class="btn-no" onclick="goToDashboard()">No</button>
-      <button class="btn-yes" onclick="goToSelectGroup()">Yes</button>
+      <button class="btn-yes" onclick="goToGroupChoice()">Yes</button>
     </div>
   </div>
 
@@ -135,6 +135,10 @@
   <script>
     function goToSelectGroup() {
       window.location.href = "/select_group_page.html";
+    }
+
+    function goToGroupChoice() {
+      window.location.href = "/group_choices.html";
     }
 
     function goToDashboard() {
