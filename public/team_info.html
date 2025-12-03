@@ -214,95 +214,72 @@
 
     window.addEventListener('load', () => {
       firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user) return alert("Please sign in");
-        insertChartCanvas();
+        if (user) {
+          const currentEmail = user.email;
+          try {
+            // Get current user document
+            const usersSnapshot = await db.collection('user').where('email', '==', currentEmail).get();
+            if (usersSnapshot.empty) return console.error("User not found");
+            const userDoc = usersSnapshot.docs[0];
+            const numericUserId = userDoc.data().id;
 
-        const currentEmail = user.email;
-        try {
-          // === Your existing Firebase logic (unchanged) ===
-          const userSnap = await db.collection("user").where("email", "==", currentEmail).get();
-          let userId = null, numericUserId = null;
-          userSnap.forEach(doc => { userId = doc.id; numericUserId = doc.data().id; });
-          if (!userId) return console.error("User not found");
+            // Fetch team for current project
+            const teamSnap = await db.collection('team').where('project_id', '==', 1).get();
+            let foundTeam = null;
+            let teamId = null;
+            let memberIds = [];
+            teamSnap.forEach(doc => {
+              const data = doc.data();
+              if (Array.isArray(data.users) && data.users.includes(numericUserId)) {
+                foundTeam = data; teamId = doc.id; memberIds = data.users;
+              }
+            });
+            if (!foundTeam) return console.error("Not in any team");
 
-          const teamSnap = await db.collection("team").where("project_id", "==", 1).get();
-          let foundTeam = null, teamId = null, memberIds = [];
-          teamSnap.forEach(doc => {
-            const data = doc.data();
-            if (Array.isArray(data.users) && 
-                (data.users.includes(userId) || (numericUserId && data.users.includes(numericUserId)))) {
-              foundTeam = data; teamId = doc.id; memberIds = data.users;
+            // Fetch member emails
+            const emailMap = {};
+            const chunks = (arr, size) => arr.reduce((a, c, i) => (i % size ? a[a.length-1].push(c) : a.push([c])) && a, []);
+            for (const chunk of chunks(memberIds, 10)) {
+              const snap = await db.collection('user').where('id', 'in', chunk).get();
+              snap.forEach(d => emailMap[d.data().id] = d.data().email || `Unknown`);
             }
-          });
-          if (!foundTeam) return console.error("Not in any team");
+            const memberEmails = memberIds.map(id => emailMap[id] || `Unknown`);
 
-          // Fetch member emails
-          const emailMap = {};
-          const chunks = (arr, size) => arr.reduce((a, c, i) => (i % size ? a[a.length-1].push(c) : a.push([c])) && a, []);
-          for (const chunk of chunks(memberIds.filter(id => typeof id === 'string'), 10)) {
-            const snap = await db.collection("user").where(firebase.firestore.FieldPath.documentId(), "in", chunk).get();
-            snap.forEach(d => emailMap[d.id] = d.data().email || d.id);
-          }
-          for (const chunk of chunks(memberIds.filter(id => typeof id === 'number'), 10)) {
-            const snap = await db.collection("user").where("id", "in", chunk).get();
-            snap.forEach(d => emailMap[d.data().id] = d.data().email || d.data().id);
-          }
-          const memberEmails = memberIds.map(id => {
-              if (typeof id === 'number') return emailMap[id] || `Unknown`;
-              return emailMap[id] || `Unknown`;
-          });
+            // Initialize task stats
+            const taskStats = {};
+            memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
 
-          // Initialize task stats for numeric user IDs
-          const taskStats = {};
-          memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
+            // Fetch tasks for each member using userId approach
+            for (const uid of memberIds) {
+              const tasksSnapshot = await db.collection('tasks')
+                .where('user_id', '==', uid)
+                .get();
 
-          // Fetch tasks for this team/project
-          const tasksSnap = await db.collection("tasks")
-              .where("project_id", "==", 1)
-              .where("team_id", "==", teamId)
-              .get();
+              tasksSnapshot.forEach(doc => {
+                const task = doc.data();
+                if (task.is_archived === true || task.is_deleted === true) return;
+                taskStats[uid].total++;
+                if (task.status === 'Completed') taskStats[uid].completed++;
+              });
+            }
 
-          console.log("Fetched tasks for team:", teamId, tasksSnap.docs.map(d => d.data()));
-
-          // Count tasks for each member
-          tasksSnap.forEach(doc => {
-              const t = doc.data();
-              console.log("Processing task:", t);
-
-              if (t.is_archived === true || t.is_deleted === true) {
-                console.log("Skipping archived/deleted task:", t);
-                return;
-              }
-              const uid = t.user_id;
-              if (uid === undefined || !memberIds.includes(uid)) {
-                console.log("Skipping task, user_id not in team members:", t);
-                return;
-              }
-
-              taskStats[uid].total++;
-              if (t.status === 'Completed') taskStats[uid].completed++;
-              console.log(`User ${uid}: total=${taskStats[uid].total}, completed=${taskStats[uid].completed}`);
-          });
-
-          // Prepare labels and data arrays
-          const labels = memberIds.map(id => memberEmails[id] || `User ${id}`);
-          const data = memberIds.map(id => {
+            // Prepare chart data
+            const labels = memberEmails;
+            const data = memberIds.map(id => {
               const stats = taskStats[id];
               return stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
-          });
-          const memberTaskStats = memberIds.map(id => taskStats[id]);
+            });
+            const memberTaskStats = memberIds.map(id => taskStats[id]);
+            const currentUserIndex = memberIds.findIndex(id => id === numericUserId);
 
-          console.log("Final task stats per member:", taskStats);
-          console.log("Member IDs:", memberIds);
-          console.log("Member emails:", memberEmails);
+            insertChartCanvas();
+            renderTeamChart(labels, data, memberTaskStats, currentUserIndex);
 
-          // Find current user index
-          const currentUserIndex = memberIds.findIndex(id => id === numericUserId);
-
-          renderTeamChart(labels, data, memberTaskStats, currentUserIndex);
-
-        } catch (err) {
-          console.error("Error:", err);
+          } catch (err) {
+            console.error("Error fetching team tasks:", err);
+          }
+        } else {
+          alert("Please sign in");
         }
       });
     });
