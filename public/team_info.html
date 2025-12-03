@@ -249,35 +249,37 @@
           }
           const memberEmails = memberIds.map(id => emailMap[id] || `User ${id}`);
 
-          // Initialize task stats
+          // Initialize task stats for numeric user IDs
           const taskStats = {};
           memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
 
-          // Fetch tasks
+          // Fetch tasks for this team/project
           const tasksSnap = await db.collection("tasks")
-            .where("project_id", "==", 1)
-            .where("team_id", "==", teamId)
-            .get();
+              .where("project_id", "==", 1)
+              .where("team_id", "==", teamId)
+              .get();
 
+          // Count tasks for each member
           tasksSnap.forEach(doc => {
-            const t = doc.data();
-            const uid = t.user_id;
-            if (memberIds.includes(uid) && t.is_archived !== true && t.is_deleted !== true) {
-                taskStats[uid].total++;
-                if (t.status === 'Completed') taskStats[uid].completed++;
-            }
+              const t = doc.data();
+              if (typeof t.user_id !== 'number') return; // ignore malformed user_id
+              if (!memberIds.includes(t.user_id)) return; // ignore tasks not assigned to this team
+              if (t.is_archived === true || t.is_deleted === true) return; // skip archived/deleted
+
+              taskStats[t.user_id].total++;
+              if (t.status === 'Completed') taskStats[t.user_id].completed++;
           });
 
           // Prepare labels and data arrays
-          const labels = memberEmails;
+          const labels = memberIds.map(id => memberEmails[id] || `User ${id}`);
           const data = memberIds.map(id => {
               const stats = taskStats[id];
-              return stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+              return stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
           });
           const memberTaskStats = memberIds.map(id => taskStats[id]);
 
           // Find current user index
-          const currentUserIndex = memberIds.findIndex(id => id === userId || id === numericUserId);
+          const currentUserIndex = memberIds.findIndex(id => id === numericUserId);
 
           renderTeamChart(labels, data, memberTaskStats, currentUserIndex);
 
