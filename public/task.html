@@ -955,11 +955,18 @@ async function saveChanges() {
     const comments = [];
     textFieldElems.forEach(textarea => comments.push(textarea.value));
 
+    // Determine status based on checklist completion
+    let newStatus = 'inProgress';
+    if (info.checklist.length > 0 && info.checklist.every(item => item.done)) {
+        newStatus = 'Completed';
+    }
+
     await db.collection('tasks').doc(docId).update({
         title: titleElem ? titleElem.value : '',
         deadline: deadlineInput ? (deadlineInput.value ? Math.floor(new Date(deadlineInput.value).getTime()/(1000*60*60*24)) : null) : null,
         info: info,
-        comments: comments
+        comments: comments,
+        status: newStatus
     });
 
     alert('Task saved successfully!');
