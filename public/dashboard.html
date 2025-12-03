@@ -238,6 +238,9 @@
       font-size: 32px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       color: #333;
+      z-index: 100;
+      cursor: pointer;
+      border: none;
     }
   </style>
 </head>
@@ -298,7 +301,7 @@
   </div>
   <div class="container"></div>
 
-  <div class="back-btn" onclick="history.back()">↩</div>
+  <div class="back-btn" onclick="window.location.href='/group_choices.html'">↩</div>
   <script>
     firebase.auth().onAuthStateChanged(async user => {
         if (user) {
