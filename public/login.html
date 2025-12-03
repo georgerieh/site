@@ -136,42 +136,58 @@
   
       function googleLogin() {
         const provider = new firebase.auth.GoogleAuthProvider();
-  
+    
         firebase.auth().signInWithPopup(provider)
-          .then(async (result) => {
-            const user = result.user;
-            if (!user) {
-              document.getElementById("message").innerText = "No user information found.";
-              return;
-            }
-            const usersRef = db.collection("user");
-            const querySnapshot = await usersRef.where("email", "==", user.email).get();
-  
-            if (querySnapshot.empty) {
-              // No user document found, create new user document with numeric id
-              const snapshot = await usersRef.orderBy("id", "desc").limit(1).get();
-              let newId = 1;
-              if (!snapshot.empty) {
-                const maxIdDoc = snapshot.docs[0];
-                const maxId = maxIdDoc.data().id;
-                if (typeof maxId === "number") {
-                  newId = maxId + 1;
+            .then(async (result) => {
+                const user = result.user;
+                if (!user) {
+                    document.getElementById("message").innerText = "No user information found.";
+                    return;
                 }
-              }
-              await usersRef.add({
-                id: newId,
-                email: user.email,
-                displayName: user.displayName || "",
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
-            }
-            document.getElementById("message").innerText = "Logged in!";
-            window.location.href = "/group_select.html"; // your redirect
-          })
-          .catch((error) => {
-            document.getElementById("message").innerText = error.message;
-          });
-      }
+    
+                // --- Domain restriction here ---
+                const allowedDomain = "essec.edu";
+                const userDomain = user.email.split("@")[1];
+    
+                if (userDomain !== allowedDomain) {
+                    // Immediately sign out
+                    firebase.auth().signOut();
+                    document.getElementById("message").innerText = 
+                        "Access denied: you must use an @" + allowedDomain + " email.";
+                    return;
+                }
+                // --- End domain restriction ---
+    
+                // proceed with your existing logic
+                const usersRef = db.collection("user");
+                const querySnapshot = await usersRef.where("email", "==", user.email).get();
+    
+                if (querySnapshot.empty) {
+                    // No user document found, create new user
+                    const snapshot = await usersRef.orderBy("id", "desc").limit(1).get();
+                    let newId = 1;
+                    if (!snapshot.empty) {
+                        const maxIdDoc = snapshot.docs[0];
+                        const maxId = maxIdDoc.data().id;
+                        if (typeof maxId === "number") {
+                            newId = maxId + 1;
+                        }
+                    }
+                    await usersRef.add({
+                        id: newId,
+                        email: user.email,
+                        displayName: user.displayName || "",
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+    
+                document.getElementById("message").innerText = "Logged in!";
+                window.location.href = "/group_select.html";
+            })
+            .catch((error) => {
+                document.getElementById("message").innerText = error.message;
+            });
+    }
     </script>
   
 </body>

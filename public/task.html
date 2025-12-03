@@ -356,6 +356,36 @@
             font-size: 1.5em;
             cursor: pointer;
         }
+    .floating-delete-btn {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        background-color: #e53935;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px 20px;
+        font-size: 0.9em;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        z-index: 999;
+    }
+    .floating-status-btn {
+        position: fixed;
+        bottom: 25px;
+        right: 140px;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px 20px;
+        font-size: 0.9em;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        z-index: 999;
+    }
     </style>
 </head>
 <body>
@@ -434,25 +464,56 @@
                 const userSnap = await db.collection("user").where("id", "==", task.user_id).get();
                 if (!userSnap.empty) responsibleEmail = userSnap.docs[0].data().email;
             }
-        
+
             // Compute progress bar: ratio of unchecked checklist items
             let checklist = task.info && task.info.checklist ? task.info.checklist : [];
             const totalItems = checklist.length;
             const remaining = checklist.filter(c => !c.done).length;
             const progressPercent = totalItems ? Math.round((totalItems - remaining)/totalItems*100) : 0;
-        
+
             document.getElementById('task-header-dynamic').innerHTML = `
                 <div class="task-header-card">
                     <div class="task-title-row">
                         <h3>${escapeHtml(task.title || '')}</h3>
                         <span>Status: ${progressPercent}%</span>
                     </div>
+
+                    <div class="deadline-container">
+                        <label>Deadline:</label>
+                        <input type="date" id="taskDeadlineInput" value="${task.deadline ? formatDeadline(task.deadline) : ''}" onchange="updateTaskDeadline(this.value)">
+                    </div>
+
                     <div class="task-details">
                         <p>Responsible: ${escapeHtml(responsibleEmail)}</p>
                         <div class="progress-bar"><div class="progress-fill" style="width:${progressPercent}%"></div></div>
                     </div>
                 </div>
             `;
+        }
+
+        function updateTaskDeadline(dateString) {
+            if (!dateString) return;
+
+            const chosenDate = new Date(dateString);
+            const daysSinceEpoch = Math.floor(chosenDate.getTime() / (1000 * 60 * 60 * 24));
+
+            const taskId = Number(getTaskIdFromUrl());
+
+            db.collection("tasks")
+              .where("task_id", "==", taskId)
+              .get()
+              .then(snap => {
+                  if (snap.empty) return;
+
+                  const docId = snap.docs[0].id;
+
+                  return db.collection("tasks").doc(docId).update({
+                      deadline: daysSinceEpoch
+                  });
+              })
+              .then(() => {
+                  console.log("Deadline updated:", daysSinceEpoch);
+              });
         }
 
         // --- CHECKLISTS & SUBTASKS ---
@@ -680,7 +741,47 @@
         function openChat() {
             console.log('Opening task chat... (API call to GET /api/tasks/{taskId}/chat)');
         }
+    // Floating Delete Button
+    async function deleteTask() {
+        const taskId = Number(getTaskIdFromUrl());
+        const snap = await db.collection('tasks').where('task_id', '==', taskId).get();
+        if (snap.empty) {
+            alert("Task not found.");
+            return;
+        }
+        const docId = snap.docs[0].id;
+
+        if (confirm("Are you sure you want to delete this task?")) {
+            await db.collection('tasks').doc(docId).update({
+                is_deleted: true
+            });
+            alert("Task deleted.");
+            window.location.href = "/project_info.html";
+        }
+    }
+
+    async function toggleStatus() {
+        const taskId = Number(getTaskIdFromUrl());
+        const snap = await db.collection('tasks').where('task_id', '==', taskId).get();
+        if (snap.empty) {
+            alert("Task not found.");
+            return;
+        }
+        const docId = snap.docs[0].id;
+        const task = snap.docs[0].data();
+
+        let newStatus = task.status === 'Completed' ? 'inProgress' : 'Completed';
+
+        await db.collection('tasks').doc(docId).update({
+            status: newStatus
+        });
+
+        alert("Status changed to: " + newStatus);
+        window.location.reload();
+    }
     </script>
 
 </body>
+<button class="floating-status-btn" onclick="toggleStatus()">Change Status</button>
+<button class="floating-delete-btn" onclick="deleteTask()">Delete</button>
 </html>

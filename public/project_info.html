@@ -97,6 +97,15 @@ async function goToTask(element) {
             margin-left: 10px;
         }
 
+        .archive-btn {
+            padding: 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .archive-btn:hover {
+            background: #eee;
+        }
+
         /* Progress Bar Styling (Simplified) */
         .progress-bar {
             height: 6px;
@@ -186,6 +195,7 @@ async function goToTask(element) {
         <span class="back-arrow" onclick="window.location.href='/dashboard.html'">&larr;</span>
         <div class="footer-button your-tasks" onclick="showYourTasks()">Your tasks</div>
         <div class="footer-button all-tasks" onclick="showAllTasks()">All tasks</div>
+        <div class="footer-button archived-tasks" onclick="showArchivedTasks()">Archive</div>
     </div>
 
 <script>
@@ -205,6 +215,7 @@ async function goToTask(element) {
     let allTasks = [];
     let currentUser = null;
     let showMineOnly = true;
+    let showArchivedOnly = false;
 
     window.addEventListener('DOMContentLoaded', () => {
         auth.onAuthStateChanged(user => {
@@ -291,12 +302,21 @@ async function goToTask(element) {
 
     function showAllTasks() {
         showMineOnly = false;
+        showArchivedOnly = false;
         updateFooterButtons();
         renderTasks();
     }
 
     function showYourTasks() {
         showMineOnly = true;
+        showArchivedOnly = false;
+        updateFooterButtons();
+        renderTasks();
+    }
+
+    function showArchivedTasks() {
+        showArchivedOnly = true;
+        showMineOnly = false;
         updateFooterButtons();
         renderTasks();
     }
@@ -304,16 +324,24 @@ async function goToTask(element) {
     function updateFooterButtons() {
         const yourTasksBtn = document.querySelector('.your-tasks');
         const allTasksBtn = document.querySelector('.all-tasks');
-        if (showMineOnly) {
+        const archiveBtn = document.querySelector('.archived-tasks');
+
+        yourTasksBtn.style.backgroundColor = 'transparent';
+        yourTasksBtn.style.color = '#555';
+        allTasksBtn.style.backgroundColor = 'transparent';
+        allTasksBtn.style.color = '#555';
+        archiveBtn.style.backgroundColor = 'transparent';
+        archiveBtn.style.color = '#555';
+
+        if (showArchivedOnly) {
+            archiveBtn.style.backgroundColor = '#333';
+            archiveBtn.style.color = 'white';
+        } else if (showMineOnly) {
             yourTasksBtn.style.backgroundColor = '#333';
             yourTasksBtn.style.color = 'white';
-            allTasksBtn.style.backgroundColor = 'transparent';
-            allTasksBtn.style.color = '#555';
         } else {
             allTasksBtn.style.backgroundColor = '#333';
             allTasksBtn.style.color = 'white';
-            yourTasksBtn.style.backgroundColor = 'transparent';
-            yourTasksBtn.style.color = '#555';
         }
     }
 
@@ -325,26 +353,35 @@ async function goToTask(element) {
             return;
         }
 
-        // Filter tasks based on showMineOnly flag
+        // Filter tasks based on flags
         let filteredTasks = [];
-        if (showMineOnly) {
-            filteredTasks = allTasks.filter(task => task.email === currentUser.email);
+        if (showArchivedOnly) {
+            filteredTasks = allTasks.filter(task =>
+                task.is_archived === true &&
+                task.is_deleted !== true
+            );
+        } else if (showMineOnly) {
+            filteredTasks = allTasks.filter(task =>
+                task.email === currentUser.email &&
+                task.is_archived !== true &&
+                task.is_deleted !== true
+            );
         } else {
-            // Show tasks of user's team
-            // Assuming user's team info is in currentUser.team or currentUser.customClaims.team
-            // Since no team info provided, fallback to tasks where task.team === currentUser.team if available
-            // For safety, check currentUser.team or custom claims
             let userTeam = null;
-            if (currentUser.team) {
-                userTeam = currentUser.team;
-            } else if (currentUser.customClaims && currentUser.customClaims.team) {
-                userTeam = currentUser.customClaims.team;
-            }
+            if (currentUser.team) userTeam = currentUser.team;
+            else if (currentUser.customClaims && currentUser.customClaims.team) userTeam = currentUser.customClaims.team;
+
             if (userTeam) {
-                filteredTasks = allTasks.filter(task => task.team === userTeam);
+                filteredTasks = allTasks.filter(task =>
+                    task.team === userTeam &&
+                    task.is_archived !== true &&
+                    task.is_deleted !== true
+                );
             } else {
-                // If no team info, show all tasks as fallback
-                filteredTasks = allTasks;
+                filteredTasks = allTasks.filter(task =>
+                    task.is_archived !== true &&
+                    task.is_deleted !== true
+                );
             }
         }
 
@@ -379,6 +416,26 @@ async function goToTask(element) {
             taskCard.dataset.deadline = deadlineStr;
             taskCard.dataset.status = statusPercent.toString();
 
+            // Archive button (only show when not in archive view)
+            if (!showArchivedOnly) {
+                const archiveBtn = document.createElement('span');
+                archiveBtn.className = 'archive-btn';
+                archiveBtn.innerHTML = '📦';
+                archiveBtn.style.cursor = 'pointer';
+                archiveBtn.style.fontSize = '1.2em';
+                archiveBtn.style.marginRight = '10px';
+                archiveBtn.onclick = async function(event) {
+                    event.stopPropagation();
+                    try {
+                        await db.collection('tasks').doc(task.id).update({ is_archived: true });
+                    } catch (e) {
+                        console.error('Error archiving task:', e);
+                        alert('Failed to archive task.');
+                    }
+                };
+                taskCard.prepend(archiveBtn);
+            }
+
             // Create task-info div
             const taskInfo = document.createElement('div');
             taskInfo.className = 'task-info';
@@ -386,6 +443,11 @@ async function goToTask(element) {
             // Task title
             const h3 = document.createElement('h3');
             h3.textContent = task.title || task.id || 'Untitled Task';
+
+            // Responsible person (email)
+            const pResponsible = document.createElement('p');
+            pResponsible.textContent = `Responsible: ${task.email || 'Unknown'}`;
+            taskInfo.appendChild(pResponsible);
 
             // Deadline paragraph
             const pDeadline = document.createElement('p');

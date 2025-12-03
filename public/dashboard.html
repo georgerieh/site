@@ -53,6 +53,16 @@
       
             snapshot.forEach(doc => {
               const task = doc.data();
+              if (task.is_archived === true || task.is_deleted === true) return;
+                let deadlineDate = null;
+                if (task.deadline && typeof task.deadline === 'number') {
+                    // Days since 1970
+                    deadlineDate = new Date(task.deadline * 24 * 60 * 60 * 1000);
+                } else {
+                    // fallback if not a number
+                    deadlineDate = new Date(task.deadline);
+                }
+            const deadlineStr = deadlineDate.toLocaleDateString();
               const taskHtml = `
                 <div class="task-card" onclick="window.location.href='task.html?task_id=${task.task_id}'" style="cursor:pointer;">
                   <div class="task-header">
@@ -60,15 +70,16 @@
                       <span class="info-icon">ℹ</span>
                       <div>
                         <div class="task-title">${task.title}</div>
-                        <div class="task-meta">Deadline: ${task.deadline}</div>
+                        <div class="task-meta">Deadline: ${deadlineStr}</div>
                         <div class="task-meta">Status: ${task.status}</div>
                         <div class="task-meta">
                         <div>Checklist items: ${Array.isArray(task.checklist) ? task.checklist.length : 0}</div>
                       </div>
                     </div>
                   </div>
-                  <button class="btn btn-done" onclick="event.stopPropagation(); markDone(${task.task_id})">Mark Done</button>
+                  
                 </div>
+                <!-- <button class="btn btn-done" onclick="event.stopPropagation(); markDone(${task.task_id})">Mark Done</button> -->
               `;
               container.insertAdjacentHTML("beforeend", taskHtml);
             });
