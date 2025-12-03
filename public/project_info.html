@@ -186,25 +186,13 @@
           : (new Date(task.deadline).toLocaleDateString() || '—');
 
         let pct = 0;
-        try {
-          const uSnap = await db.collection('user')
-            .where('email','==',task.email).limit(1).get();
-          if (!uSnap.empty) {
-            const userId = uSnap.docs[0].data().id;
-            const tasksSnap = await db.collection("tasks")
-              .where("user_id", "==", userId)
-              .where("team_id","==",task.team_id)
-              .get();
-            const totalTasks = tasksSnap.size;
-            let completedTasks = 0;
-            tasksSnap.forEach(doc => {
-              const t = doc.data();
-              if (t.status && t.status.toLowerCase() === "completed") completedTasks++;
-            });
-            pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-          }
-        } catch (e) {
-          console.error("Error calculating task progress:", e);
+        if (task.status && task.status.toLowerCase() === 'completed') {
+          pct = 100;
+        } else if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+          const doneCount = task.checklist.filter(c => c.done === true).length;
+          pct = Math.round((doneCount / task.checklist.length) * 100);
+        } else {
+          pct = 0;
         }
 
         const card = document.createElement('div');
