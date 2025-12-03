@@ -317,9 +317,15 @@
 
         const newTaskId = Date.now();   // numeric task_id
         await db.collection('tasks').add({
-          title, project_id:projectId, team_id:teamId,
-          email:currentUser.email, deadline:null,
-          checklist:[], status:'inProgress', task_id:newTaskId
+          title,
+          project_id: projectId,
+          team_id: teamId,
+          email: currentUser.email,
+          user_id: uid,
+          deadline: null,
+          checklist: [],
+          status: 'inProgress',
+          task_id: newTaskId
         });
         // onSnapshot will automatically refresh the list
       };

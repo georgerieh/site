@@ -109,7 +109,18 @@
                           </span>
                         </div>
                         <div class="task-meta">
-                          <div>Checklist items: ${Array.isArray(task.checklist) ? task.checklist.length : 0}</div>
+                          ${Array.isArray(task.checklist) && task.checklist.length > 0 ? `
+                            <ul class="task-checklist">
+                              ${task.checklist.map(item => `
+                                <li style="margin:4px 0; list-style: disc inside;">
+                                  <input type="checkbox" disabled ${item.done ? 'checked' : ''}>
+                                  <strong>${item.Title || 'No title'}</strong>
+                                  ${item.Description ? ` - ${item.Description}` : ''}
+                                  ${item.Deadline ? ` (Due: ${new Date(item.Deadline * 24*60*60*1000).toLocaleDateString()})` : ''}
+                                </li>
+                              `).join('')}
+                            </ul>
+                          ` : '<span style="color:#999;">No checklist items</span>'}
                         </div>
                       </div>
                     </div>
