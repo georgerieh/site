@@ -249,29 +249,36 @@
           }
           const memberEmails = memberIds.map(id => emailMap[id] || `User ${id}`);
 
-          const currentUserIndex = memberIds.findIndex(id => id === userId || id === numericUserId);
+          // Initialize task stats with string keys
+          const taskStats = {};
+          const memberIdsStr = memberIds.map(id => String(id));
+          memberIdsStr.forEach(id => taskStats[id] = { total: 0, completed: 0 });
 
-          // Fetch tasks
+          // Process tasks
           const tasksSnap = await db.collection("tasks")
             .where("project_id", "==", 1)
             .where("team_id", "==", teamId)
             .get();
 
-          const taskStats = {};
-          memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
           tasksSnap.forEach(doc => {
             const t = doc.data();
-            if (memberIds.includes(t.user_id)) {
-              taskStats[t.user_id].total++;
-              if (t.status === 'Completed') taskStats[t.user_id].completed++;
+            const uid = String(t.user_id);
+            if (memberIdsStr.includes(uid)) {
+                taskStats[uid].total++;
+                if (t.status === 'Completed') taskStats[uid].completed++;
             }
           });
 
+          // Prepare labels and data arrays
           const labels = memberEmails;
-          const data = memberIds.map(id => 
-            taskStats[id].total ? Math.round((taskStats[id].completed / taskStats[id].total) * 100) : 0
-          );
-          const memberTaskStats = memberIds.map(id => taskStats[id]);
+          const data = memberIdsStr.map(id => {
+              const stats = taskStats[id];
+              return stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+          });
+          const memberTaskStats = memberIdsStr.map(id => taskStats[id]);
+
+          // Find current user index
+          const currentUserIndex = memberIdsStr.findIndex(id => id === String(userId) || id === String(numericUserId));
 
           renderTeamChart(labels, data, memberTaskStats, currentUserIndex);
 
