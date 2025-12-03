@@ -203,7 +203,7 @@
 
         // 2. Get ALL tasks assigned to this user (by numeric id)
         const tasksSnap = await db.collection("tasks")
-          .where("user_id", "==", numericUserId)
+          .where("user_id", "==", Number(numericUserId))
           .get();
 
         let totalTasks = 0;
