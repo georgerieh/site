@@ -400,7 +400,7 @@
     <div class="add-new-btn" onclick="addDynamicTextField()">
         <span>+</span> Add new text field
     </div>
-    <div class="global-actions">
+    <div class="global-actions" style="display:none;">
         <button class="notify-btn" onclick="notifyEveryone()">Notify everyone</button>
         <button class="discuss-btn" onclick="openChat()">Discuss in chat</button>
     </div>
@@ -501,7 +501,7 @@
             document.getElementById('task-header-dynamic').innerHTML = `
                 <div class="task-header-card">
                     <div class="task-title-row">
-                        <h3>${escapeHtml(task.title || '')}</h3>
+                        <input type="text" class="editable-text heading" value="${escapeHtml(task.title || '')}" onblur="updateTaskTitle(this.value)">
                         <span>Status: ${progressPercent}%</span>
                     </div>
 
@@ -698,8 +698,16 @@
         });
 
         // --- Core Task Updates ---
-        function updateTaskTitle(title) {
-            console.log(`Task title updated to: ${title} (API call to PUT /api/tasks/{taskId})`);
+        async function updateTaskTitle(title) {
+            const taskId = Number(getTaskIdFromUrl());
+            const snap = await db.collection('tasks').where('task_id', '==', taskId).get();
+            if (snap.empty) return alert("Task not found");
+
+            await db.collection('tasks').doc(snap.docs[0].id).update({
+                title: title
+            });
+
+            console.log(`Task title updated to: ${title}`);
         }
         function updateDeadline(date) {
             console.log(`Deadline set to: ${date} (API call to PUT /api/tasks/{taskId})`);
