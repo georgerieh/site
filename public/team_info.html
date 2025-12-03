@@ -262,15 +262,26 @@
               .where("team_id", "==", teamId)
               .get();
 
+          console.log("Fetched tasks for team:", teamId, tasksSnap.docs.map(d => d.data()));
+
           // Count tasks for each member
           tasksSnap.forEach(doc => {
               const t = doc.data();
-              if (t.is_archived === true || t.is_deleted === true) return;
+              console.log("Processing task:", t);
+
+              if (t.is_archived === true || t.is_deleted === true) {
+                console.log("Skipping archived/deleted task:", t);
+                return;
+              }
               const uid = t.user_id;
-              if (uid === undefined || !memberIds.includes(uid)) return;
+              if (uid === undefined || !memberIds.includes(uid)) {
+                console.log("Skipping task, user_id not in team members:", t);
+                return;
+              }
 
               taskStats[uid].total++;
               if (t.status === 'Completed') taskStats[uid].completed++;
+              console.log(`User ${uid}: total=${taskStats[uid].total}, completed=${taskStats[uid].completed}`);
           });
 
           // Prepare labels and data arrays
@@ -280,6 +291,10 @@
               return stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
           });
           const memberTaskStats = memberIds.map(id => taskStats[id]);
+
+          console.log("Final task stats per member:", taskStats);
+          console.log("Member IDs:", memberIds);
+          console.log("Member emails:", memberEmails);
 
           // Find current user index
           const currentUserIndex = memberIds.findIndex(id => id === numericUserId);
