@@ -3,192 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Login • CoLabSpace</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       margin: 0;
       height: 100vh;
+      background: #ffffff; /* Pure white background */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(to right, #000 0%, #000 15%, #f8f9fa 15%, #f8f9fa 85%, #000 85%, #000 100%);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px;
     }
+
     #login-container {
       background: white;
-      padding: 40px 32px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      padding: 48px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       width: 100%;
-      max-width: 380px;
+      max-width: 400px;
       text-align: center;
+      border: 1px solid #eee;
     }
+
+    .welcome-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 40px;
+      line-height: 1.5;
+    }
+
     h3 {
       margin: 0 0 32px 0;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 600;
       color: #000;
     }
-    input {
-      width: 100%;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-    input:focus {
-      outline: none;
-      border-color: #000;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
-    }
+
     button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background-color: #000;
       color: white;
       font-size: 16px;
       font-weight: 600;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      margin-bottom: 16px;
+      margin-top: 12px;
+      transition: background 0.2s;
     }
+
     button:hover {
       background-color: #1a1a1a;
     }
+
     #message {
-      margin: 0;
+      margin: 16px 0 0;
       min-height: 24px;
       font-size: 14px;
       color: #d32f2f;
+      font-weight: 500;
     }
-    .forgot {
-      margin-top: 16px;
-    }
-    .forgot a {
-      color: #000;
-      text-decoration: none;
-      font-size: 14px;
-    }
-    .forgot a:hover {
-      text-decoration: underline;
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 24px;
+      background: #000;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
+
   <div id="login-container">
-    <h3>Login</h3>
-    
-    <!-- <input id="email" placeholder="Email" type="email" required />
-    <input id="password" placeholder="Password" type="password" required />
-    
-    <button onclick="login()">Login</button> -->
-    
+    <!-- Optional: Add a logo/icon -->
+    <div class="logo">C</div>
+
+    <div class="welcome-title">Welcome to CoLabSpace!</div>
+    <div class="subtitle">Sign in with your ESSEC account to continue</div>
+
     <p id="message"></p>
-    <button onclick="googleLogin()">Sign in with Google</button>
-    <div class="forgot">
-      <a href="#">Forgot password?</a>
+    
+    <button onclick="googleLogin()">
+      Sign in with Google
+    </button>
+
+    <div style="margin-top: 24px; font-size: 13px; color: #777;">
+      Only @essec.edu emails are allowed
     </div>
   </div>
-    <!-- Firebase SDK (use latest v9+ modular style recommended, but keeping v9 compat for minimal changes) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
-        authDomain: "colabspace-aed91.firebaseapp.com",
-        projectId: "colabspace-aed91",
-        storageBucket: "colabspace-aed91.firebasestorage.app",
-        messagingSenderId: "1096273499808",
-        appId: "1:1096273499808:web:42012f619a3cbced321bc5"
-      };
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-  
-      function login() {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        if (!email || !password) {
-          document.getElementById("message").innerText = "Please fill in both fields.";
-          return;
-        }
-        document.getElementById("message").innerText = "Signing in...";
-        firebase.auth().signInWithEmailAndPassword(email, password)
-          .then((userCredential) => {
-            document.getElementById("message").innerText = "Logged in successfully!";
-            // Redirect to your protected page
-            window.location.href = "/index.html";  // change to your actual page
-          })
-          .catch((error) => {
-            document.getElementById("message").innerText = error.message;
-          });
-      }
-      // Optional: Allow Enter key to submit
-      const passwordInput = document.getElementById("password");
-      if(passwordInput){
-        passwordInput.addEventListener("keypress", function(e) {
-          if (e.key === "Enter") login();
-        });
-      }
-  
-      function googleLogin() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-    
-        firebase.auth().signInWithPopup(provider)
-            .then(async (result) => {
-                const user = result.user;
-                if (!user) {
-                    document.getElementById("message").innerText = "No user information found.";
-                    return;
-                }
-    
-                // --- Domain restriction here ---
-                const allowedDomain = "essec.edu";
-                const userDomain = user.email.split("@")[1];
-    
-                if (userDomain !== allowedDomain) {
-                    // Immediately sign out
-                    firebase.auth().signOut();
-                    document.getElementById("message").innerText = 
-                        "Access denied: you must use an @" + allowedDomain + " email.";
-                    return;
-                }
-                // --- End domain restriction ---
-    
-                // proceed with your existing logic
-                const usersRef = db.collection("user");
-                const querySnapshot = await usersRef.where("email", "==", user.email).get();
-    
-                if (querySnapshot.empty) {
-                    // No user document found, create new user
-                    const snapshot = await usersRef.orderBy("id", "desc").limit(1).get();
-                    let newId = 1;
-                    if (!snapshot.empty) {
-                        const maxIdDoc = snapshot.docs[0];
-                        const maxId = maxIdDoc.data().id;
-                        if (typeof maxId === "number") {
-                            newId = maxId + 1;
-                        }
-                    }
-                    await usersRef.add({
-                        id: newId,
-                        email: user.email,
-                        displayName: user.displayName || "",
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-    
-                document.getElementById("message").innerText = "Logged in!";
-                window.location.href = "/group_select.html";
-            })
-            .catch((error) => {
-                document.getElementById("message").innerText = error.message;
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+      authDomain: "colabspace-aed91.firebaseapp.com",
+      projectId: "colabspace-aed91",
+      storageBucket: "colabspace-aed91.firebasestorage.app",
+      messagingSenderId: "1096273499808",
+      appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function googleLogin() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ hd: "essec.edu" }); // Optional: force ESSEC domain
+
+      firebase.auth().signInWithPopup(provider)
+        .then(async (result) => {
+          const user = result.user;
+          if (!user || !user.email) {
+            document.getElementById("message").innerText = "Login failed.";
+            return;
+          }
+
+          // Domain check
+          const allowedDomain = "essec.edu";
+          const userDomain = user.email.split("@")[1];
+
+          if (userDomain !== allowedDomain) {
+            await firebase.auth().signOut();
+            document.getElementById("message").innerText = 
+              `Access denied. Please use an @${allowedDomain} email.`;
+            return;
+          }
+
+          // Check if user exists in Firestore
+          const userRef = db.collection("user");
+          const snapshot = await userRef.where("email", "==", user.email).get();
+
+          if (snapshot.empty) {
+            // Create new user with incremental ID
+            const lastUserSnap = await userRef.orderBy("id", "desc").limit(1).get();
+            let newId = 1;
+            if (!lastUserSnap.empty) {
+              newId = (lastUserSnap.docs[0].data().id || 0) + 1;
+            }
+
+            await userRef.add({
+              id: newId,
+              email: user.email,
+              displayName: user.displayName || user.email.split("@")[0],
+              photoURL: user.photoURL || "",
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+          }
+
+          document.getElementById("message").innerText = "Welcome back!";
+          setTimeout(() => {
+            window.location.href = "/group_select.html";  // Your main page
+          }, 800);
+        })
+        .catch((error) => {
+          console.error("Google login error:", error);
+          document.getElementById("message").innerText = 
+            error.code === "auth/popup-closed-by-user" ? "Login cancelled." : "Login failed. Try again.";
+        });
     }
-    </script>
-  
+  </script>
 </body>
 </html>
