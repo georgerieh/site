@@ -146,7 +146,7 @@
     }
 
     /* ─────── Render filtered tasks ─────── */
-    function renderTasks() {
+    async function renderTasks() {
       const container = document.querySelector('.container');
       container.innerHTML = '';
 
@@ -180,15 +180,32 @@
         return;
       }
 
-      filtered.forEach(task => {
+      for (const task of filtered) {
         const deadline = task.deadline && typeof task.deadline === 'number'
           ? new Date(task.deadline * 86400000).toLocaleDateString()
           : (new Date(task.deadline).toLocaleDateString() || '—');
 
-        const checklist = Array.isArray(task.checklist) ? task.checklist : [];
-        const total = checklist.length;
-        const done  = checklist.filter(i => i.status === 'Completed').length;
-        const pct   = total ? Math.round((done / total) * 100) : 0;
+        let pct = 0;
+        try {
+          const uSnap = await db.collection('user')
+            .where('email','==',task.email).limit(1).get();
+          if (!uSnap.empty) {
+            const userId = uSnap.docs[0].data().id;
+            const tasksSnap = await db.collection("tasks")
+              .where("user_id", "==", userId)
+              .where("team_id","==",task.team_id)
+              .get();
+            const totalTasks = tasksSnap.size;
+            let completedTasks = 0;
+            tasksSnap.forEach(doc => {
+              const t = doc.data();
+              if (t.status && t.status.toLowerCase() === "completed") completedTasks++;
+            });
+            pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+          }
+        } catch (e) {
+          console.error("Error calculating task progress:", e);
+        }
 
         const card = document.createElement('div');
         card.className = 'task-card';
@@ -203,7 +220,7 @@
           <p>Deadline: ${deadline}</p>
           <p>Status: ${pct}% Done</p>
         `;
-        if (total) {
+        if (pct > 0) {
           const bar = document.createElement('div');
           bar.className = 'progress-bar';
           const fill = document.createElement('div');
@@ -244,7 +261,7 @@
         card.appendChild(arrow);
 
         container.appendChild(card);
-      });
+      }
     }
 
     /* ─────── Footer button UI ─────── */

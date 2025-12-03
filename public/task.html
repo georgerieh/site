@@ -937,7 +937,7 @@ async function saveChanges() {
     const docId = snap.docs[0].id;
 
     // Collect current field values
-    const titleElem = document.querySelector('.task-header-card .task-title-row h3');
+    const titleElem = document.querySelector('.task-header-card .task-title-row input.editable-text.heading');
     const deadlineInput = document.getElementById('taskDeadlineInput');
     const checklistElems = document.querySelectorAll('#checklist-container .section-card');
     const textFieldElems = document.querySelectorAll('#text-field-container .dynamic-text-field-inner textarea, #text-field-container .dynamic-text-field textarea:not(.heading)');
@@ -956,7 +956,7 @@ async function saveChanges() {
     textFieldElems.forEach(textarea => comments.push(textarea.value));
 
     await db.collection('tasks').doc(docId).update({
-        title: titleElem ? titleElem.textContent : '',
+        title: titleElem ? titleElem.value : '',
         deadline: deadlineInput ? (deadlineInput.value ? Math.floor(new Date(deadlineInput.value).getTime()/(1000*60*60*24)) : null) : null,
         info: info,
         comments: comments
