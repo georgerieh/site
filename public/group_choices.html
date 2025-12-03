@@ -262,41 +262,41 @@ async function renderTeams() {
     });
 }
 
-// Join a team
+// Join or switch a team
 async function joinTeam(teamId, maxUsers) {
     if (!currentUserId) return;
 
+    // Check if user is already in a team for this project
     const existingTeamSnap = await db.collection("team")
         .where("project_id", "==", projectId)
         .where("users", "array-contains", currentUserId)
         .get();
 
+    // If user is in a team, remove from that team first
     if (!existingTeamSnap.empty) {
-        alert("You can join only one group per project.");
-        return;
+        const oldTeamRef = existingTeamSnap.docs[0].ref;
+        await oldTeamRef.update({
+            users: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+        });
     }
 
-    const teamRef = db.collection("team").where("team_id", "==", teamId).limit(1);
-    const snap = await teamRef.get();
-    if (snap.empty) {
+    // Add user to the new team
+    const teamRefSnap = await db.collection("team").where("team_id", "==", teamId).limit(1).get();
+    if (teamRefSnap.empty) {
         alert("Team not found");
         return;
     }
 
-    const docRef = snap.docs[0].ref;
-    const teamData = snap.docs[0].data();
+    const teamDocRef = teamRefSnap.docs[0].ref;
+    const teamData = teamRefSnap.docs[0].data();
     const users = Array.isArray(teamData.users) ? teamData.users : [];
 
     if (users.length >= maxUsers) {
         alert("Team is already full");
         return;
     }
-    if (users.includes(currentUserId)) {
-        alert("You are already in this team");
-        return;
-    }
 
-    await docRef.update({
+    await teamDocRef.update({
         users: firebase.firestore.FieldValue.arrayUnion(currentUserId)
     });
 

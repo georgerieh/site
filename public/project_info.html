@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tasks</title>
-
+ 
   <!-- Firebase (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
@@ -193,14 +193,21 @@
         /* ----- archive button (only when not in archive view) ----- */
         if (!showArchivedOnly) {
           const arch = document.createElement('span');
-          arch.textContent = 'Archive';
-          arch.style.marginRight = '8px';
+          arch.textContent = '📦'; // emoji for archive
+          arch.title = 'Archive Task';
+          arch.style.marginRight = '12px';
           arch.style.cursor = 'pointer';
+          arch.style.fontSize = '1.2em';
           arch.onclick = async e => {
             e.stopPropagation();
             await db.collection('tasks').doc(task.id).update({is_archived:true});
           };
-          card.appendChild(arch);
+          // Insert to left of task-info
+          const leftControls = document.createElement('div');
+          leftControls.style.display = 'flex';
+          leftControls.style.alignItems = 'center';
+          leftControls.appendChild(arch);
+          card.insertBefore(leftControls, info);
         }
 
         const info = document.createElement('div');
@@ -220,11 +227,22 @@
           bar.appendChild(fill);
           info.appendChild(bar);
         }
-        card.appendChild(info);
+        if (!showArchivedOnly) {
+          // If arch was inserted, info is after leftControls
+          // So if arch was inserted, info is already in card
+          // But if arch was not inserted (archived view), append info here
+          if (!card.contains(info)) {
+            card.appendChild(info);
+          }
+        } else {
+          card.appendChild(info);
+        }
 
         const arrow = document.createElement('span');
-        arrow.className = 'arrow';
-        arrow.innerHTML = 'Right Arrow';
+        arrow.textContent = '➡️'; // right arrow emoji
+        arrow.style.cursor = 'pointer';
+        arrow.style.fontSize = '1.5em';
+        arrow.style.color = '#7a63c6';
         card.appendChild(arrow);
 
         container.appendChild(card);
@@ -233,18 +251,13 @@
 
     /* ─────── Footer button UI ─────── */
     function updateFooterButtons() {
-      document.querySelectorAll('.footer-button').forEach(b => {
-        b.classList.remove('active');
-        b.style.background = 'transparent';
-        b.style.color = '#555';
-      });
-      const active = showArchivedOnly ? '.archived-tasks' :
-                     showMineOnly      ? '.your-tasks' :
-                                         '.all-tasks';
-      const el = document.querySelector(active);
-      el.classList.add('active');
-      el.style.background = '#333';
-      el.style.color = '#fff';
+      document.querySelectorAll('.footer-button').forEach(b => b.classList.remove('active'));
+
+      const activeSelector = showArchivedOnly ? '.archived-tasks' :
+                             showMineOnly      ? '.your-tasks' :
+                                                 '.all-tasks';
+      const el = document.querySelector(activeSelector);
+      if (el) el.classList.add('active');
     }
     function showYourTasks()   { showMineOnly=true; showArchivedOnly=false; updateFooterButtons(); renderTasks(); }
     function showAllTasks()    { showMineOnly=false; showArchivedOnly=false; updateFooterButtons(); renderTasks(); }
