@@ -323,12 +323,21 @@
 
             const tasksSnap = await db.collection("tasks").where("user_id", "==", userId).get();
             let totalTasks = tasksSnap.size;
-            let completedTasks = 0;
+            let progressSum = 0;
+
             tasksSnap.forEach(doc => {
                 const t = doc.data();
-                if (t.status.toLowerCase() === "completed") completedTasks++;
+                if (!t) return;
+
+                if (t.status && t.status.toLowerCase() === "completed") {
+                    progressSum += 1; // Completed task counts as full
+                } else if (Array.isArray(t.checklist) && t.checklist.length > 0) {
+                    const doneCount = t.checklist.filter(c => c.done === true).length;
+                    progressSum += doneCount / t.checklist.length; // Fraction of checklist done
+                }
             });
-            const progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+            const progressPercent = totalTasks > 0 ? Math.round((progressSum / totalTasks) * 100) : 0;
             document.querySelector(".progress-bar").style.width = progressPercent + "%";
         } else {
             // Not signed in → redirect or keep placeholder
