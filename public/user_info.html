@@ -51,7 +51,7 @@
       color: #202124;
     }
 
-    /* Progress Bar - same as Dashboard */
+    /* Progress Bar */
     .progress-container {
       height: 12px;
       background: #e0e0e0;
@@ -150,6 +150,11 @@
       </div>
 
       <div class="stat-row">
+        <span class="label">Archived tasks</span>
+        <span class="value" id="archivedTasks">0</span>
+      </div>
+
+      <div class="stat-row">
         <span class="label">Your rating</span>
         <span class="value" id="userRating">—</span>
       </div>
@@ -157,8 +162,8 @@
 
   </div>
 
-  <!-- Back Button - Bottom Left -->
-  <button class="back-btn" onclick="history.back()">Back</button>
+  <!-- Back Button -->
+  <button class="back-btn" onclick="history.back()">↩</button>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -185,7 +190,7 @@
       }
 
       try {
-        // 1. Get user document from 'user' collection
+        // 1. Get user document
         const userSnap = await db.collection("user")
           .where("email", "==", user.email)
           .limit(1)
@@ -205,7 +210,7 @@
         document.getElementById("userAvatar").src = 
           user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e8def8&color=6200ea&bold=true&size=128`;
 
-        // 2. Fetch tasks — support both number and string user_id
+        // 2. Fetch all tasks (active + archived) for this user
         const [byNumber, byString, byEmail] = await Promise.all([
           db.collection("tasks").where("user_id", "==", numericUserId).get(),
           db.collection("tasks").where("user_id", "==", numericUserId.toString()).get(),
@@ -216,12 +221,21 @@
 
         let totalTasks = 0;
         let completedTasks = 0;
+        let archivedTasks = 0;
 
         allTasks.forEach(doc => {
           const task = doc.data();
 
-          if (task.is_deleted === true || task.is_archived === true) return;
+          // Skip deleted tasks
+          if (task.is_deleted === true) return;
 
+          // Count archived tasks
+          if (task.is_archived === true) {
+            archivedTasks++;
+            return; // don't count archived tasks in active stats
+          }
+
+          // Count active tasks
           totalTasks++;
 
           const status = (task.status || "").toString().toLowerCase();
@@ -238,12 +252,13 @@
         document.getElementById("totalTasks").textContent = totalTasks;
         document.getElementById("completedTasks").textContent = completedTasks;
         document.getElementById("inProgressTasks").textContent = inProgressTasks;
+        document.getElementById("archivedTasks").textContent = archivedTasks;
 
         // Rating
         const rating = userDoc.data().rating;
         document.getElementById("userRating").innerHTML = rating ? `${rating}/10 Stars` : "—";
 
-        console.log("User stats loaded:", { totalTasks, completedTasks, inProgressTasks, progressPercent });
+        console.log("User stats:", { totalTasks, completedTasks, inProgressTasks, archivedTasks, progressPercent });
 
       } catch (error) {
         console.error("Error loading user info:", error);
