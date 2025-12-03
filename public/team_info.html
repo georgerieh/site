@@ -249,12 +249,11 @@
           }
           const memberEmails = memberIds.map(id => emailMap[id] || `User ${id}`);
 
-          // Initialize task stats with string keys
+          // Initialize task stats
           const taskStats = {};
-          const memberIdsStr = memberIds.map(id => String(id));
-          memberIdsStr.forEach(id => taskStats[id] = { total: 0, completed: 0 });
+          memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
 
-          // Process tasks
+          // Fetch tasks
           const tasksSnap = await db.collection("tasks")
             .where("project_id", "==", 1)
             .where("team_id", "==", teamId)
@@ -262,8 +261,8 @@
 
           tasksSnap.forEach(doc => {
             const t = doc.data();
-            const uid = String(t.user_id);
-            if (memberIdsStr.includes(uid)) {
+            const uid = t.user_id;
+            if (memberIds.includes(uid) && t.is_archived !== true && t.is_deleted !== true) {
                 taskStats[uid].total++;
                 if (t.status === 'Completed') taskStats[uid].completed++;
             }
@@ -271,14 +270,14 @@
 
           // Prepare labels and data arrays
           const labels = memberEmails;
-          const data = memberIdsStr.map(id => {
+          const data = memberIds.map(id => {
               const stats = taskStats[id];
               return stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
           });
-          const memberTaskStats = memberIdsStr.map(id => taskStats[id]);
+          const memberTaskStats = memberIds.map(id => taskStats[id]);
 
           // Find current user index
-          const currentUserIndex = memberIdsStr.findIndex(id => id === String(userId) || id === String(numericUserId));
+          const currentUserIndex = memberIds.findIndex(id => id === userId || id === numericUserId);
 
           renderTeamChart(labels, data, memberTaskStats, currentUserIndex);
 
