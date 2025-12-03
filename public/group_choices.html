@@ -91,6 +91,26 @@
       margin-top: 2px;
     }
 
+    .back-btn {
+      position: fixed;
+      bottom: 30px;           /* distance from bottom */
+      left: 25%;             /* distance from left edge */
+      transform: none;        /* remove the centering transform */
+      width: 56px;
+      height: 56px;
+      background: white;
+      border: 1px solid #dadce0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #5f6368;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      z-index: 100;
+      cursor: pointer;
+    }
+
     .action-btn {
       padding: 10px 20px;
       border-radius: 12px;
@@ -166,6 +186,9 @@
   <button class="create-btn">Create Group</button>
 
   <script>
+
+  <button class="back-btn" onclick="history.back()">Back</button>
+
 const db = firebase.firestore();
 const auth = firebase.auth();
 
