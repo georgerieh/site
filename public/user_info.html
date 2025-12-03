@@ -244,7 +244,7 @@
           if (status === "completed" || status === "done") {
             completedTasks++;
           }
-        });
+        };
 
         const inProgressTasks = totalTasks - completedTasks;
         const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
