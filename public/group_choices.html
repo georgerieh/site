@@ -127,10 +127,6 @@
 
     /* Floating Create Button – Dark style as in your screenshot */
     .create-btn {
-      position: fixed;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%);
       background: #202124;
       color: white;
       border: none;
@@ -142,7 +138,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      z-index: 100;
+      cursor: pointer;
     }
 
     .create-btn::before {
@@ -168,20 +164,24 @@
         firebase.initializeApp(firebaseConfig);
   </script>
   <div class="container">
-    <div style="text-align:center; margin-top:20px;">
-        <button id="skip-group-btn" style="
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 12px;
-            background-color: #ccc;
-            border: none;
-            cursor: pointer;
-        ">Skip Group Selection</button>
-    </div>
   </div>
 
-  <!-- Dark Create Group Button -->
-  <button class="create-btn">Create Group</button>
+  <div style="position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; z-index: 100;">
+      <button class="create-btn">Create Group</button>
+      <button id="skip-group-btn" style="
+          background: #202124;
+          color: white;
+          border: none;
+          border-radius: 30px;
+          padding: 16px 32px;
+          font-size: 17px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+      ">Skip Group Selection</button>
+  </div>
 
   <script>
 
@@ -228,18 +228,7 @@ async function renderTeams() {
 
     const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
     const container = document.querySelector(".container");
-    container.innerHTML = `
-      <div style="text-align:center; margin-top:20px;">
-          <button id="skip-group-btn" style="
-              padding: 10px 20px;
-              font-size: 16px;
-              border-radius: 12px;
-              background-color: #ccc;
-              border: none;
-              cursor: pointer;
-          ">Skip Group Selection</button>
-      </div>
-    `;
+    container.innerHTML = ""; // Clear container
 
     teamSnap.docs.forEach(doc => {
         const team = doc.data();
