@@ -190,26 +190,7 @@
         card.className = 'task-card';
         card.onclick = () => goToTask(card);
 
-        /* ----- archive button (only when not in archive view) ----- */
-        if (!showArchivedOnly) {
-          const arch = document.createElement('span');
-          arch.textContent = '📦'; // emoji for archive
-          arch.title = 'Archive Task';
-          arch.style.marginRight = '12px';
-          arch.style.cursor = 'pointer';
-          arch.style.fontSize = '1.2em';
-          arch.onclick = async e => {
-            e.stopPropagation();
-            await db.collection('tasks').doc(task.id).update({is_archived:true});
-          };
-          // Insert to left of task-info
-          const leftControls = document.createElement('div');
-          leftControls.style.display = 'flex';
-          leftControls.style.alignItems = 'center';
-          leftControls.appendChild(arch);
-          card.insertBefore(leftControls, info);
-        }
-
+        // Create info first
         const info = document.createElement('div');
         info.className = 'task-info';
         info.innerHTML = `
@@ -227,19 +208,32 @@
           bar.appendChild(fill);
           info.appendChild(bar);
         }
+
+        // Archive button (only when not in archive view)
         if (!showArchivedOnly) {
-          // If arch was inserted, info is after leftControls
-          // So if arch was inserted, info is already in card
-          // But if arch was not inserted (archived view), append info here
-          if (!card.contains(info)) {
-            card.appendChild(info);
-          }
-        } else {
-          card.appendChild(info);
+          const arch = document.createElement('span');
+          arch.textContent = '📦';
+          arch.title = 'Archive Task';
+          arch.style.marginRight = '12px';
+          arch.style.cursor = 'pointer';
+          arch.style.fontSize = '1.2em';
+          arch.onclick = async e => {
+            e.stopPropagation();
+            await db.collection('tasks').doc(task.id).update({is_archived:true});
+          };
+
+          const leftControls = document.createElement('div');
+          leftControls.style.display = 'flex';
+          leftControls.style.alignItems = 'center';
+          leftControls.appendChild(arch);
+
+          card.appendChild(leftControls);
         }
 
+        card.appendChild(info);
+
         const arrow = document.createElement('span');
-        arrow.textContent = '➡️'; // right arrow emoji
+        arrow.textContent = '➡️';
         arrow.style.cursor = 'pointer';
         arrow.style.fontSize = '1.5em';
         arrow.style.color = '#7a63c6';
