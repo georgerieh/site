@@ -150,6 +150,16 @@
         firebase.initializeApp(firebaseConfig);
   </script>
   <div class="container">
+    <div style="text-align:center; margin-top:20px;">
+        <button id="skip-group-btn" style="
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 12px;
+            background-color: #ccc;
+            border: none;
+            cursor: pointer;
+        ">Skip Group Selection</button>
+    </div>
   </div>
 
   <!-- Dark Create Group Button -->
@@ -290,8 +300,15 @@ async function createGroup(projectId) {
     await renderTeams();
 }
 
+</script>
+<script>
 // Add click handler to create button
 document.querySelector(".create-btn").addEventListener("click", () => createGroup(projectId));
+
+// Skip group selection button handler
+document.getElementById("skip-group-btn").addEventListener("click", () => {
+    window.location.href = "/dashboard.html";
+});
 </script>
 </body>
 </html>

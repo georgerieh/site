@@ -186,7 +186,7 @@
 
   <div class="bottom-actions">
     <button class="choice-btn" onclick="goToSelectGroup()">Choice is on</button>
-    <button class="random-btn" onclick="goToDashboard()">Random Choice</button>
+    <button class="random-btn" onclick="randomChoice()">Random Choice</button>
   </div>
 
   <div class="navigation-bar"></div>
@@ -213,8 +213,8 @@
       const projectDoc = await db.collection("project")
       .where("project_id", "==", projectId)
       .get();
-      if (!projectDoc.exists) return alert("Project not found");
-      const maxUsers = Number(projectDoc.data().max_number);
+      if (projectDoc.empty) return alert("Project not found");
+      const maxUsers = Number(projectDoc.docs[0].data().max_number);
 
       // Get all teams in project
       const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
@@ -295,6 +295,54 @@
 
     function goToGroupChoice() {
       window.location.href = "/group_choices.html";
+    }
+
+    async function randomChoice() {
+        const projectId = 1; // adjust if dynamic
+        const user = auth.currentUser;
+        if (!user) return alert("User not signed in");
+
+        // Get numeric user_id
+        const userSnap = await db.collection("user").where("email", "==", user.email).get();
+        if (userSnap.empty) return alert("User not found in Firestore");
+        const currentUserId = userSnap.docs[0].data().id;
+
+        // Get project max number
+        const projectDoc = await db.collection("project").where("project_id", "==", projectId).get();
+        if (projectDoc.empty) return alert("Project not found");
+        const maxUsers = Number(projectDoc.docs[0].data().max_number);
+
+        // Get all teams in project
+        const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
+
+        // Filter available teams (not full, user not already in)
+        let availableTeams = teamSnap.docs.filter(doc => {
+            const team = doc.data();
+            const usersArray = Array.isArray(team.users) ? team.users.map(u => Number(u)) : [];
+            return usersArray.length < maxUsers && !usersArray.includes(currentUserId);
+        });
+
+        if (availableTeams.length > 0) {
+            // Pick random available team
+            const randIndex = Math.floor(Math.random() * availableTeams.length);
+            const teamId = availableTeams[randIndex].data().team_id;
+            await db.collection("team").doc(String(teamId)).update({
+                users: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+            });
+            window.location.href = "/dashboard.html";
+        } else {
+            // All teams full, create new team
+            const existingIds = teamSnap.docs.map(doc => doc.data().team_id);
+            const newTeamId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+            const newTeam = {
+                team_id: newTeamId,
+                project_id: projectId,
+                users: [currentUserId],
+                name: "Team " + newTeamId
+            };
+            await db.collection("team").doc(String(newTeamId)).set(newTeam);
+            window.location.href = "/dashboard.html";
+        }
     }
   </script>
   
