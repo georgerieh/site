@@ -194,10 +194,11 @@
   <div id="teamList"></div>
 
   <script>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
     async function goToDashboard() {
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const auth = firebase.auth();
       const projectId = 1; // replace with dynamic project id if needed
 
       const user = auth.currentUser;
@@ -270,9 +271,6 @@
     }
 
     async function joinTeam(teamId) {
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-      const auth = firebase.auth();
       const user = auth.currentUser;
       if (!user) return alert("User not signed in");
 
