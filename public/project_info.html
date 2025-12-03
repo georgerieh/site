@@ -282,7 +282,8 @@ async function goToTask(element) {
                 // Generate a Firestore auto-id, but also set a numeric task_id if you want incrementing
                 // We'll use Firestore's auto-id for now
                 try {
-                    await db.collection('tasks').add({
+                    const newTaskId = Date.now(); // numeric task_id
+                    await db.collection('tasks').doc().set({
                         title: title,
                         project_id: projectId,
                         team_id: teamId,
@@ -290,7 +291,7 @@ async function goToTask(element) {
                         deadline: null,
                         checklist: [],
                         status: 'inProgress',
-                        task_id: Date.now()
+                        task_id: newTaskId
                     });
                     // No need to manually refresh, onSnapshot will update
                 } catch (e) {
