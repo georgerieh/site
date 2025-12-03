@@ -267,7 +267,7 @@
               // Ensure the task has a numeric user_id
               if (typeof task.user_id !== 'number') return;
               // Skip archived/deleted tasks
-              if (task.is_archived === true || task.is_deleted === true) return;
+              if (task.is_deleted === true) return;
               // Increment task counts for this user
               taskStats[task.user_id] = taskStats[task.user_id] || { total: 0, completed: 0 };
               taskStats[task.user_id].total++;
