@@ -93,22 +93,19 @@
 
     .back-btn {
       position: fixed;
-      bottom: 30px;           /* distance from bottom */
-      left: 25%;             /* distance from left edge */
-      transform: none;        /* remove the centering transform */
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 56px;
       height: 56px;
       background: white;
-      border: 1px solid #dadce0;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 32px;
-      color: #5f6368;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-      z-index: 100;
-      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      color: #333;
     }
 
     .action-btn {
@@ -130,10 +127,6 @@
 
     /* Floating Create Button – Dark style as in your screenshot */
     .create-btn {
-      position: fixed;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%);
       background: #202124;
       color: white;
       border: none;
@@ -145,8 +138,9 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      z-index: 100;
+      cursor: pointer;
     }
+
     .create-btn::before {
       content: "+";
       font-size: 28px;
@@ -170,24 +164,26 @@
         firebase.initializeApp(firebaseConfig);
   </script>
   <div class="container">
-    <div style="text-align:center; margin-top:20px;">
-        <button id="skip-group-btn" style="
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 12px;
-            background-color: #ccc;
-            border: none;
-            cursor: pointer;
-        ">Skip Group Selection</button>
-    </div>
   </div>
 
-  <!-- Dark Create Group Button -->
-  <button class="create-btn">Create Group</button>
+  <div style="position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; z-index: 100;">
+      <button class="create-btn">Create Group</button>
+      <button id="skip-group-btn" style="
+          background: #202124;
+          color: white;
+          border: none;
+          border-radius: 30px;
+          padding: 16px 32px;
+          font-size: 17px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+      ">Skip Group Selection</button>
+  </div>
 
   <script>
-
-  <button class="back-btn" onclick="history.back()">Back</button>
 
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -232,7 +228,7 @@ async function renderTeams() {
 
     const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
     const container = document.querySelector(".container");
-    container.innerHTML = ""; // clear previous content
+    container.innerHTML = ""; // Clear container
 
     teamSnap.docs.forEach(doc => {
         const team = doc.data();
@@ -259,6 +255,10 @@ async function renderTeams() {
             </div>
         `;
         container.insertAdjacentHTML("beforeend", teamHtml);
+    });
+
+    document.getElementById("skip-group-btn").addEventListener("click", () => {
+        window.location.href = "/dashboard.html";
     });
 }
 
