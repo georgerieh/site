@@ -475,6 +475,23 @@
                 if (!userSnap.empty) responsibleEmail = userSnap.docs[0].data().email;
             }
 
+            // Fetch team members emails if team_id exists
+            let teamMembersOptions = '';
+            if (task.team_id) {
+                const teamSnap = await db.collection('team').where('team_id', '==', task.team_id).get();
+                if (!teamSnap.empty) {
+                    const usersArray = teamSnap.docs[0].data().users || [];
+                    for (const uid of usersArray) {
+                        const userSnap = await db.collection('user').where('id', '==', uid).get();
+                        if (!userSnap.empty) {
+                            const email = userSnap.docs[0].data().email;
+                            const selected = email === responsibleEmail ? 'selected' : '';
+                            teamMembersOptions += `<option value="${email}" ${selected}>${email}</option>`;
+                        }
+                    }
+                }
+            }
+
             // Compute progress bar: ratio of unchecked checklist items
             let checklist = task.info && task.info.checklist ? task.info.checklist : [];
             const totalItems = checklist.length;
@@ -494,11 +511,31 @@
                     </div>
 
                     <div class="task-details">
-                        <p>Responsible: ${escapeHtml(responsibleEmail)}</p>
+                        <p>Responsible: 
+                            <select id="responsibleSelect" onchange="updateResponsible(this.value)">
+                                ${teamMembersOptions}
+                            </select>
+                        </p>
                         <div class="progress-bar"><div class="progress-fill" style="width:${progressPercent}%"></div></div>
                     </div>
                 </div>
             `;
+        }
+        // --- Responsible Person Update ---
+        async function updateResponsible(email) {
+            const taskId = Number(getTaskIdFromUrl());
+            const userSnap = await db.collection('user').where('email', '==', email).get();
+            if (userSnap.empty) return alert("User not found");
+
+            const userId = userSnap.docs[0].data().id;
+            const taskSnap = await db.collection('tasks').where('task_id', '==', taskId).get();
+            if (taskSnap.empty) return alert("Task not found");
+
+            await db.collection('tasks').doc(taskSnap.docs[0].id).update({
+                user_id: userId
+            });
+
+            alert(`Responsible person updated to ${email}`);
         }
 
         function updateTaskDeadline(dateString) {
@@ -531,23 +568,92 @@
             const container = document.getElementById('checklist-container');
             container.innerHTML = '';
             checklistCounter = 1;
-        
+
             if (!task.info || !Array.isArray(task.info.checklist)) return;
-        
+
             task.info.checklist.forEach((item, idx) => {
                 const checklistId = checklistCounter++;
                 const card = document.createElement('div');
                 card.className = 'section-card';
                 card.id = `checklist-card-${checklistId}`;
-        
+
                 card.innerHTML = `
-                    <input type="text" class="editable-text heading" value="${escapeHtml(item.Title || '')}" onblur="updateChecklistHeading(${checklistId}, this.value)">
-                    <input type="date" value="${item.Deadline ? formatDeadline(item.Deadline) : ''}" onchange="updateChecklistDeadline(${checklistId}, this.value)">
-                    <textarea onblur="updateChecklistDescription(${checklistId}, this.value)">${escapeHtml(item.Description || '')}</textarea>
-                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistDone(${checklistId}, this.checked)">
-                    <button onclick="deleteChecklist(${checklistId})">Delete</button>
+                    <div style="display:flex; align-items:center; margin-bottom:8px;">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} style="margin-right:10px;" onchange="toggleChecklistDone(${checklistId}, this.checked)">
+                        <input type="text" class="editable-text heading" placeholder="Title" value="${escapeHtml(item.Title || '')}" onblur="updateChecklistHeading(${checklistId}, this.value)">
+                    </div>
+                    <div style="display:flex; align-items:center; margin-bottom:8px;">
+                        <label style="margin-right:5px;">Deadline:</label>
+                        <input type="date" value="${item.Deadline ? formatDeadline(item.Deadline) : ''}" onchange="updateChecklistDeadline(${checklistId}, this.value)">
+                    </div>
+                    <textarea placeholder="Description" onblur="updateChecklistDescription(${checklistId}, this.value)">${escapeHtml(item.Description || '')}</textarea>
+                    <span class="delete-btn" onclick="deleteChecklist(${checklistId})">Delete Checklist</span>
                 `;
                 container.appendChild(card);
+            });
+        }
+
+        // Toggle done
+        function toggleChecklistDone(checklistId, checked) {
+            const taskId = Number(getTaskIdFromUrl());
+            const path = `info.checklist.${checklistId-1}.done`;
+            db.collection('tasks').where('task_id', '==', taskId).get().then(snap => {
+                if (snap.empty) return;
+                db.collection('tasks').doc(snap.docs[0].id).update({ [path]: checked });
+            });
+        }
+
+        // Update description
+        function updateChecklistDescription(checklistId, value) {
+            const taskId = Number(getTaskIdFromUrl());
+            const path = `info.checklist.${checklistId-1}.Description`;
+            db.collection('tasks').where('task_id', '==', taskId).get().then(snap => {
+                if (snap.empty) return;
+                db.collection('tasks').doc(snap.docs[0].id).update({ [path]: value });
+            });
+        }
+
+        // Update deadline
+        function updateChecklistDeadline(checklistId, dateString) {
+            if (!dateString) return;
+            const daysSinceEpoch = Math.floor(new Date(dateString).getTime()/(1000*60*60*24));
+            const taskId = Number(getTaskIdFromUrl());
+            const path = `info.checklist.${checklistId-1}.Deadline`;
+            db.collection('tasks').where('task_id', '==', taskId).get().then(snap => {
+                if (snap.empty) return;
+                db.collection('tasks').doc(snap.docs[0].id).update({ [path]: daysSinceEpoch });
+            });
+        }
+
+        // Add new checklist point
+        function addNewChecklist() {
+            const container = document.getElementById('checklist-container');
+            const newId = checklistCounter++;
+            const card = document.createElement('div');
+            card.className = 'section-card';
+            card.id = `checklist-card-${newId}`;
+            card.innerHTML = `
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <input type="checkbox" style="margin-right:10px;" onchange="toggleChecklistDone(${newId}, this.checked)">
+                    <input type="text" class="editable-text heading" placeholder="Title" onblur="updateChecklistHeading(${newId}, this.value)">
+                </div>
+                <div style="display:flex; align-items:center; margin-bottom:8px;">
+                    <label style="margin-right:5px;">Deadline:</label>
+                    <input type="date" onchange="updateChecklistDeadline(${newId}, this.value)">
+                </div>
+                <textarea placeholder="Description" onblur="updateChecklistDescription(${newId}, this.value)"></textarea>
+                <span class="delete-btn" onclick="deleteChecklist(${newId})">Delete Checklist</span>
+            `;
+            container.appendChild(card);
+        }
+
+        // Update heading
+        function updateChecklistHeading(checklistId, value) {
+            const taskId = Number(getTaskIdFromUrl());
+            const path = `info.checklist.${checklistId-1}.Title`;
+            db.collection('tasks').where('task_id', '==', taskId).get().then(snap => {
+                if (snap.empty) return;
+                db.collection('tasks').doc(snap.docs[0].id).update({ [path]: value });
             });
         }
 
