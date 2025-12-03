@@ -213,13 +213,21 @@
           const task = doc.data();
           console.log("Task loaded:", task); // log full task
 
-          if (task.is_deleted === true) {
-            console.log("Skipping deleted task:", task.task_id);
+          if (!task || task.is_deleted === true) {
+            console.log("Skipping deleted task:", task?.task_id);
             return; // exclude deleted
           }
 
           totalTasks++;
-          const isCompleted = task.status && task.status.toString().toLowerCase() === "completed";
+
+          // Task is completed if status is 'Completed' or all checklist items done
+          let isCompleted = false;
+          if (task.status && task.status.toString().toLowerCase() === 'completed') {
+            isCompleted = true;
+          } else if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+            isCompleted = task.checklist.every(c => c.done === true);
+          }
+
           if (isCompleted) {
             completedTasks++;
             console.log(`Task completed: ${task.task_id || task.title || 'unknown'}`);
