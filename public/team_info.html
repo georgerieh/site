@@ -264,11 +264,21 @@
             
             tasksSnapshot.forEach(doc => {
               const task = doc.data();
+              // Ensure the task has a numeric user_id
+              if (typeof task.user_id !== 'number') return;
+              // Skip archived/deleted tasks
               if (task.is_archived === true || task.is_deleted === true) return;
-              taskStats[uid].total++;
-              if (task.status === 'Completed') taskStats[uid].completed++;
+              // Increment task counts for this user
+              taskStats[task.user_id] = taskStats[task.user_id] || { total: 0, completed: 0 };
+              taskStats[task.user_id].total++;
+              if (String(task.status).toLowerCase() === 'completed') taskStats[task.user_id].completed++;
+              console.log(`User ${task.user_id}: total=${taskStats[task.user_id].total}, completed=${task.user_id ? taskStats[task.user_id].completed : 0}`);
             });
           }
+
+          console.log("Final task stats:", taskStats);
+          console.log("Member IDs:", memberIds);
+          console.log("Member emails:", memberEmails);
 
           // Prepare chart data
           const labels = memberEmails;
