@@ -1,529 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script>
-    let originalHTML = null;
-    function goToDashboard() {
-        window.location.href = "/dashboard.html";  // or just close / go back if you prefer
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tasks</title>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* ──────────────────────  Base & Mobile  ────────────────────── */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:#f0f0f5;
+      min-height:100vh;
+      padding-bottom:100px;
     }
-async function goToTask(element) {
-    const card = element.closest('.task-card');
-    const taskTitle = card.querySelector('h3').textContent; // task name/title
-    const projectId = 1;  // replace with dynamic projectId if needed
+    .container { padding:12px; }
 
-    // Get current user's numeric ID
-    const userSnap = await db.collection('user').where('email', '==', currentUser.email).get();
-    if (userSnap.empty) { alert("User not found"); return; }
-    const currentUserId = userSnap.docs[0].data().id;
+    /* ──────────────────────  Task Card  ────────────────────── */
+    .task-card {
+      background:#fff;
+      border-radius:14px;
+      margin-bottom:12px;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow:0 2px 6px rgba(0,0,0,.07);
+      border:1px solid #e2e2e2;
+      cursor:pointer;
+    }
+    .task-info { flex:1; padding-right:12px; }
+    .task-info h3 { margin:0 0 4px; font-size:1.08em; font-weight:600; }
+    .task-info p { margin:2px 0; font-size:.9em; color:#555; }
 
-    // Retrieve user's team for this project
-    const teamSnap = await db.collection('team')
-        .where('project_id', '==', projectId)
-        .where('users', 'array-contains', currentUserId)
-        .get();
+    .progress-bar { height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden; margin-top:6px; }
+    .progress-fill { height:100%; background:#7a63c6; border-radius:3px; }
 
-    if (teamSnap.empty) { alert("Team not found"); return; }
-    const teamId = teamSnap.docs[0].data().team_id;
-    console.log(teamSnap)
-    console.log(teamId)
-    // Query task by title within project and team
-    const taskSnap = await db.collection('tasks')
-        .where('title', '==', taskTitle)
-        .where('project_id', '==', projectId)
-        .where('team_id', '==', teamId)
-        .get();
+    .arrow { font-size:1.6em; color:#555; }
 
-    if (taskSnap.empty) { alert("Task not found"); return; }
+    /* ──────────────────────  Footer Nav  ────────────────────── */
+    .footer-nav {
+      position:fixed;
+      bottom:0; left:0; right:0;
+      background:#fff;
+      padding:12px 8px;
+      display:flex;
+      align-items:center;
+      border-top:1px solid #eee;
+      box-shadow:0 -2px 6px rgba(0,0,0,.05);
+      z-index:10;
+    }
+    .back-arrow { font-size:1.6em; margin-right:8px; cursor:pointer; }
+    .footer-button {
+      flex:1;
+      text-align:center;
+      padding:10px 0;
+      border-radius:20px;
+      font-weight:600;
+      font-size:.95em;
+      cursor:pointer;
+      transition:background .2s, color .2s;
+    }
+    .footer-button.active { background:#333; color:#fff; }
 
-    const taskId = taskSnap.docs[0].data().task_id;
-
-    // Redirect to task page with task_id
-    window.location.href = `/task.html?task_id=${encodeURIComponent(taskId)}`;
-}
-    </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimalist Task List</title>
-    <style>
-        /* Base Reset and Mobile Optimization */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f5; /* Light background */
-        }
-        .container {
-            padding: 10px;
-        }
-
-        /* Task Card Styling */
-        .task-card {
-            background-color: white;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border: 1px solid #ddd;
-        }
-
-        .task-info {
-            flex-grow: 1;
-            padding-right: 15px;
-        }
-
-        .task-info h3 {
-            margin: 0 0 5px 0;
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-
-        .task-info p {
-            margin: 2px 0;
-            font-size: 0.9em;
-            color: #555;
-        }
-
-        /* Arrow Styling (Kept as requested) */
-        .arrow {
-            font-size: 1.8em;
-            color: #555; /* A neutral color */
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .archive-btn {
-            padding: 6px;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-        .archive-btn:hover {
-            background: #eee;
-        }
-
-        /* Progress Bar Styling (Simplified) */
-        .progress-bar {
-            height: 6px;
-            background-color: #e0e0e0;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: #7a63c6; /* A purple color matching the visual */
-            border-radius: 3px;
-        }
-
-        /* Footer Navigation (Kept as requested) */
-        .footer-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: white;
-            padding: 15px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #eee;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .footer-button {
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: bold;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .back-arrow {
-            font-size: 1.5em;
-            color: black;
-            padding: 10px;
-            margin-right: 10px;
-            cursor: pointer;
-        }
-
-        .your-tasks {
-            background-color: #333;
-            color: white;
-            flex-grow: 1; /* Allows it to take up more space */
-        }
-
-        .all-tasks {
-            background-color: transparent;
-            color: #555;
-            flex-grow: 1; /* Allows it to take up more space */
-        }
-    </style>
+    /* ──────────────────────  Add‑Task FAB  ────────────────────── */
+    #add-task-btn {
+      position:fixed;
+      bottom:80px; right:20px;
+      padding:14px 22px;
+      border-radius:50px;
+      background:#7a63c6;
+      color:#fff;
+      border:none;
+      font-weight:600;
+      box-shadow:0 4px 12px rgba(0,0,0,.2);
+      z-index:100;
+      cursor:pointer;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Task cards will be dynamically inserted here -->
-    </div>
+  <div class="container"><!-- tasks injected here --></div>
 
-    <button id="add-task-btn" style="
-        position: fixed;
-        bottom: 80px;
-        right: 20px;
-        padding: 16px 24px;
-        border-radius: 50px;
-        background-color: #7a63c6;
-        color: white;
-        border: none;
-        font-size: 1em;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        z-index: 1000;
-    ">
-        Add New Task
-    </button>
+  <!-- FAB -->
+  <button id="add-task-btn">Add New Task</button>
 
-    <div class="footer-nav">
-        <span class="back-arrow" onclick="window.location.href='/dashboard.html'">&larr;</span>
-        <div class="footer-button your-tasks" onclick="showYourTasks()">Your tasks</div>
-        <div class="footer-button all-tasks" onclick="showAllTasks()">All tasks</div>
-        <div class="footer-button archived-tasks" onclick="showArchivedTasks()">Archive</div>
-    </div>
+  <!-- Footer (must be AFTER the script that defines the functions) -->
+  <div class="footer-nav">
+    <span class="back-arrow" onclick="window.location.href='/dashboard.html'">Back</span>
+    <div class="footer-button your-tasks active"   onclick="showYourTasks()">Your tasks</div>
+    <div class="footer-button all-tasks"          onclick="showAllTasks()">All tasks</div>
+    <div class="footer-button archived-tasks"    onclick="showArchivedTasks()">Archive</div>
+  </div>
 
-<script>
-    // Your Firebase configuration here (replace with your own config)
+  <!-- ---------------------------------------------------------- -->
+  <!--                     ALL JAVASCRIPT                         -->
+  <!-- ---------------------------------------------------------- -->
+  <script>
+    /* ─────── Firebase init ─────── */
     const firebaseConfig = {
-        apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
-        authDomain: "colabspace-aed91.firebaseapp.com",
-    projectId: "colabspace-aed91",
-    storageBucket: "colabspace-aed91.firebasestorage.app",
-    messagingSenderId: "1096273499808",
-    appId: "1:1096273499808:web:42012f619a3cbced321bc5"
-      };
-       
-      firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+      apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
+      authDomain: "colabspace-aed91.firebaseapp.com",
+      projectId: "colabspace-aed91",
+      storageBucket: "colabspace-aed91.firebasestorage.app",
+      messagingSenderId: "1096273499808",
+      appId: "1:1096273499808:web:42012f619a3cbced321bc5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db   = firebase.firestore();
     const auth = firebase.auth();
 
-    let allTasks = [];
-    let currentUser = null;
-    let showMineOnly = true;
-    let showArchivedOnly = false;
-    let currentTeamId = null;
+    let allTasks        = [];
+    let currentUser     = null;
+    let currentTeamId   = null;
+    let showMineOnly    = true;
+    let showArchivedOnly= false;
 
-window.addEventListener('DOMContentLoaded', () => {
-    auth.onAuthStateChanged(async user => {
-        if (user) {
-            currentUser = user;
-            await loadCurrentTeam();   // get this user’s team_id
-            fetchTasks();              // now load tasks
-        } else {
-            currentUser = null;
-            document.querySelector('.container').innerHTML =
-                '<p>Please log in to see your tasks.</p>';
-        }
-    });
-});
+    /* ─────── Helper: find user’s numeric id & team ─────── */
+    async function loadCurrentTeam() {
+      const projectId = 1;
+      const userSnap = await db.collection('user')
+        .where('email','==',currentUser.email).limit(1).get();
+      if (userSnap.empty) throw new Error('User not in user collection');
+      const numericId = userSnap.docs[0].data().id;
 
-async function loadCurrentTeam() {
-    const projectId = 1; // use your real project id if different
-
-    // 1) find numeric user id from "user" collection
-    const userSnap = await db.collection('user')
-        .where('email', '==', currentUser.email)
-        .get();
-
-    if (userSnap.empty) {
-        console.error('User not found in user collection');
-        return;
-    }
-    const currentUserId = userSnap.docs[0].data().id;
-
-    // 2) find team for this project that contains this user
-    const teamSnap = await db.collection('team')
-        .where('project_id', '==', projectId)
-        .where('users', 'array-contains', currentUserId)
-        .get();
-
-    if (teamSnap.empty) {
-        console.error('Team not found for user');
-        return;
+      const teamSnap = await db.collection('team')
+        .where('project_id','==',projectId)
+        .where('users','array-contains',numericId).limit(1).get();
+      if (teamSnap.empty) throw new Error('Team not found');
+      currentTeamId = teamSnap.docs[0].data().team_id;
     }
 
-    currentTeamId = teamSnap.docs[0].data().team_id;
-}
-
-
-    function fetchTasks() {
-        db.collection('tasks').onSnapshot(snapshot => {
-            allTasks = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                allTasks.push({...data, id: doc.id});
-            });
-            renderTasks();
-        }, err => {
-            console.error('Error fetching tasks:', err);
-        });
-    }
-
-    // --- Add New Task Feature ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const addBtn = document.getElementById('add-task-btn');
-        if (addBtn) {
-            addBtn.addEventListener('click', async () => {
-                if (!currentUser) {
-                    alert('Please log in to add a task.');
-                    return;
-                }
-                let title = prompt('Enter task name:');
-                if (!title || !title.trim()) return;
-                title = title.trim();
-
-                const projectId = 1; // static, or replace with dynamic if needed
-                // Get current user's numeric ID
-                let userSnap;
-                try {
-                    userSnap = await db.collection('user').where('email', '==', currentUser.email).get();
-                } catch (e) {
-                    alert('Error fetching user info.'); return;
-                }
-                if (userSnap.empty) { alert("User not found"); return; }
-                const currentUserId = userSnap.docs[0].data().id;
-                // Retrieve user's team for this project
-                let teamSnap;
-                try {
-                    teamSnap = await db.collection('team')
-                        .where('project_id', '==', projectId)
-                        .where('users', 'array-contains', currentUserId)
-                        .get();
-                } catch (e) {
-                    alert('Error fetching team info.'); return;
-                }
-                if (teamSnap.empty) { alert("Team not found"); return; }
-                const teamId = teamSnap.docs[0].data().team_id;
-
-                // Generate a Firestore auto-id, but also set a numeric task_id if you want incrementing
-                // We'll use Firestore's auto-id for now
-                try {
-                    const newTaskId = Date.now(); // numeric task_id
-                await db.collection('tasks').doc().set({
-                    title: title,
-                    project_id: projectId,
-                    team_id: teamId,
-                    email: currentUser.email,
-                    deadline: null,
-                    checklist: [],
-                    status: 'inProgress',
-                    task_id: newTaskId
-                });
-                    // No need to manually refresh, onSnapshot will update
-                } catch (e) {
-                    alert('Error creating task.'); return;
-                }
-            });
-        }
-    });
-
-    function showAllTasks() {
-        showMineOnly = false;
-        showArchivedOnly = false;
-        updateFooterButtons();
+    /* ─────── Real‑time tasks listener ─────── */
+    function startTaskListener() {
+      db.collection('tasks').onSnapshot(snap => {
+        allTasks = snap.docs.map(d => ({id:d.id, ...d.data()}));
         renderTasks();
+      });
     }
 
-    function showYourTasks() {
-        showMineOnly = true;
-        showArchivedOnly = false;
-        updateFooterButtons();
-        renderTasks();
-    }
-
-    function showArchivedTasks() {
-        showArchivedOnly = true;
-        showMineOnly = false;
-        updateFooterButtons();
-        renderTasks();
-    }
-
-    function updateFooterButtons() {
-        const yourTasksBtn = document.querySelector('.your-tasks');
-        const allTasksBtn = document.querySelector('.all-tasks');
-        const archiveBtn = document.querySelector('.archived-tasks');
-
-        yourTasksBtn.style.backgroundColor = 'transparent';
-        yourTasksBtn.style.color = '#555';
-        allTasksBtn.style.backgroundColor = 'transparent';
-        allTasksBtn.style.color = '#555';
-        archiveBtn.style.backgroundColor = 'transparent';
-        archiveBtn.style.color = '#555';
-
-        if (showArchivedOnly) {
-            archiveBtn.style.backgroundColor = '#333';
-            archiveBtn.style.color = 'white';
-        } else if (showMineOnly) {
-            yourTasksBtn.style.backgroundColor = '#333';
-            yourTasksBtn.style.color = 'white';
-        } else {
-            allTasksBtn.style.backgroundColor = '#333';
-            allTasksBtn.style.color = 'white';
-        }
-    }
-
+    /* ─────── Render filtered tasks ─────── */
     function renderTasks() {
-        const container = document.querySelector('.container');
-        container.innerHTML = '';
-        if (!currentUser) {
-            container.innerHTML += '<p>Please log in to see your tasks.</p>';
-            return;
+      const container = document.querySelector('.container');
+      container.innerHTML = '';
+
+      let filtered = [];
+
+      if (!currentTeamId) {
+        container.innerHTML = '<p>Loading team…</p>';
+        return;
+      }
+
+      if (showArchivedOnly) {
+        filtered = allTasks.filter(t =>
+          t.is_archived === true && t.is_deleted !== true && t.team_id === currentTeamId);
+      } else if (showMineOnly) {
+        filtered = allTasks.filter(t =>
+          t.email === currentUser.email &&
+          t.is_archived !== true && t.is_deleted !== true &&
+          t.team_id === currentTeamId);
+      } else {
+        filtered = allTasks.filter(t =>
+          t.team_id === currentTeamId &&
+          t.is_archived !== true && t.is_deleted !== true);
+      }
+
+      if (!filtered.length) {
+        container.innerHTML = '<p>No tasks to display.</p>';
+        return;
+      }
+
+      filtered.forEach(task => {
+        const deadline = task.deadline && typeof task.deadline === 'number'
+          ? new Date(task.deadline * 86400000).toLocaleDateString()
+          : (new Date(task.deadline).toLocaleDateString() || '—');
+
+        const checklist = Array.isArray(task.checklist) ? task.checklist : [];
+        const total = checklist.length;
+        const done  = checklist.filter(i => i.status === 'Completed').length;
+        const pct   = total ? Math.round((done / total) * 100) : 0;
+
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.onclick = () => goToTask(card);
+
+        /* ----- archive button (only when not in archive view) ----- */
+        if (!showArchivedOnly) {
+          const arch = document.createElement('span');
+          arch.textContent = 'Archive';
+          arch.style.marginRight = '8px';
+          arch.style.cursor = 'pointer';
+          arch.onclick = async e => {
+            e.stopPropagation();
+            await db.collection('tasks').doc(task.id).update({is_archived:true});
+          };
+          card.appendChild(arch);
         }
 
-        // Filter tasks based on flags
-        // Filter tasks based on flags
-        let filteredTasks = [];
-
-        if (!currentTeamId) {
-    // Team not loaded yet → show nothing (safer)
-            filteredTasks = [];
-        } else if (showArchivedOnly) {
-    // Archived tasks from my team
-            filteredTasks = allTasks.filter(task =>
-                task.is_archived === true &&
-                task.is_deleted !== true &&
-                task.team_id === currentTeamId
-         );
-        } else if (showMineOnly) {
-    // Only my tasks, in my team
-            filteredTasks = allTasks.filter(task =>
-                task.email === currentUser.email &&
-                ask.is_archived !== true &&
-                task.is_deleted !== true &&
-                task.team_id === currentTeamId
-        );
-        } else {
-    // "All tasks" tab → all tasks in my team
-            filteredTasks = allTasks.filter(task =>
-                task.team_id === currentTeamId &&
-                task.is_archived !== true &&
-                task.is_deleted !== true
-        );
-}
-
-
-
+        const info = document.createElement('div');
+        info.className = 'task-info';
+        info.innerHTML = `
+          <h3>${task.title || 'Untitled'}</h3>
+          <p>Responsible: ${task.email || '—'}</p>
+          <p>Deadline: ${deadline}</p>
+          <p>Status: ${pct}% Done</p>
+        `;
+        if (total) {
+          const bar = document.createElement('div');
+          bar.className = 'progress-bar';
+          const fill = document.createElement('div');
+          fill.className = 'progress-fill';
+          fill.style.width = pct + '%';
+          bar.appendChild(fill);
+          info.appendChild(bar);
         }
+        card.appendChild(info);
 
-        if (filteredTasks.length === 0) {
-            container.innerHTML += '<p>No tasks to display.</p>';
-            return;
-        }
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.innerHTML = 'Right Arrow';
+        card.appendChild(arrow);
 
-        filteredTasks.forEach(task => {
-            // Parse deadline from numeric timestamp to human-readable date
-            // Assuming task.Deadline is days since 1970
-            let deadlineDate = null;
-            if (task.deadline && typeof task.deadline === 'number') {
-                // Days since 1970
-                deadlineDate = new Date(task.deadline * 24 * 60 * 60 * 1000);
-            } else {
-                // fallback if not a number
-                deadlineDate = new Date(task.deadline);
-            }
-            const deadlineStr = deadlineDate.toLocaleDateString();
+        container.appendChild(card);
+      });
+    }
 
-            // Compute status as: (checklist length - number of items with done=false) / checklist length * 100
-            let checklist = Array.isArray(task.checklist) ? task.checklist : [];
-            let totalItems = checklist.length;
-            let undoneCount = checklist.filter(item => item.status = 'inProgress').length;
-            let statusPercent = totalItems > 0 ? Math.round(((totalItems - undoneCount) / totalItems) * 100) : 0;
+    /* ─────── Footer button UI ─────── */
+    function updateFooterButtons() {
+      document.querySelectorAll('.footer-button').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'transparent';
+        b.style.color = '#555';
+      });
+      const active = showArchivedOnly ? '.archived-tasks' :
+                     showMineOnly      ? '.your-tasks' :
+                                         '.all-tasks';
+      const el = document.querySelector(active);
+      el.classList.add('active');
+      el.style.background = '#333';
+      el.style.color = '#fff';
+    }
+    function showYourTasks()   { showMineOnly=true; showArchivedOnly=false; updateFooterButtons(); renderTasks(); }
+    function showAllTasks()    { showMineOnly=false; showArchivedOnly=false; updateFooterButtons(); renderTasks(); }
+    function showArchivedTasks(){ showMineOnly=false; showArchivedOnly=true; updateFooterButtons(); renderTasks(); }
 
-            // Create task card element
-            const taskCard = document.createElement('div');
-            taskCard.className = 'task-card';
-            taskCard.dataset.id = task.id || '';
-            taskCard.dataset.deadline = deadlineStr;
-            taskCard.dataset.status = statusPercent.toString();
+    /* ─────── Navigate to a single task page ─────── */
+    async function goToTask(cardEl) {
+      const title = cardEl.querySelector('h3').textContent;
+      const projectId = 1;
 
-            // Archive button (only show when not in archive view)
-            if (!showArchivedOnly) {
-                const archiveBtn = document.createElement('span');
-                archiveBtn.className = 'archive-btn';
-                archiveBtn.innerHTML = '📦';
-                archiveBtn.style.cursor = 'pointer';
-                archiveBtn.style.fontSize = '1.2em';
-                archiveBtn.style.marginRight = '10px';
-                archiveBtn.onclick = async function(event) {
-                    event.stopPropagation();
-                    try {
-                        await db.collection('tasks').doc(task.id).update({ is_archived: true });
-                    } catch (e) {
-                        console.error('Error archiving task:', e);
-                        alert('Failed to archive task.');
-                    }
-                };
-                taskCard.prepend(archiveBtn);
-            }
+      // numeric user id
+      const uSnap = await db.collection('user')
+        .where('email','==',currentUser.email).limit(1).get();
+      if (uSnap.empty) return alert('User not found');
+      const uid = uSnap.docs[0].data().id;
 
-            // Create task-info div
-            const taskInfo = document.createElement('div');
-            taskInfo.className = 'task-info';
+      // team that contains this user
+      const tSnap = await db.collection('team')
+        .where('project_id','==',projectId)
+        .where('users','array-contains',uid).limit(1).get();
+      if (tSnap.empty) return alert('Team not found');
+      const teamId = tSnap.docs[0].data().team_id;
 
-            // Task title
-            const h3 = document.createElement('h3');
-            h3.textContent = task.title || task.id || 'Untitled Task';
+      // find the task by title + project + team
+      const taskSnap = await db.collection('tasks')
+        .where('title','==',title)
+        .where('project_id','==',projectId)
+        .where('team_id','==',teamId).limit(1).get();
+      if (taskSnap.empty) return alert('Task not found');
 
-            // Responsible person (email)
-            const pResponsible = document.createElement('p');
-            pResponsible.textContent = `Responsible: ${task.email || 'Unknown'}`;
-            taskInfo.appendChild(pResponsible);
+      const taskId = taskSnap.docs[0].data().task_id;
+      window.location.href = `/task.html?task_id=${encodeURIComponent(taskId)}`;
+    }
 
-            // Deadline paragraph
-            const pDeadline = document.createElement('p');
-            pDeadline.textContent = `Deadline: ${deadlineStr}`;
+    /* ─────── Add‑Task FAB ─────── */
+    async function initAddTaskButton() {
+      const btn = document.getElementById('add-task-btn');
+      btn.onclick = async () => {
+        if (!currentUser) return alert('Log in first');
+        const title = prompt('Task name:')?.trim();
+        if (!title) return;
 
-            // Status paragraph
-            const pStatus = document.createElement('p');
-            pStatus.textContent = `Status: ${statusPercent}% Done`;
+        const projectId = 1;
+        const uSnap = await db.collection('user')
+          .where('email','==',currentUser.email).limit(1).get();
+        if (uSnap.empty) return alert('User not found');
+        const uid = uSnap.docs[0].data().id;
 
-            taskInfo.appendChild(h3);
-            taskInfo.appendChild(pDeadline);
-            taskInfo.appendChild(pStatus);
+        const tSnap = await db.collection('team')
+          .where('project_id','==',projectId)
+          .where('users','array-contains',uid).limit(1).get();
+        if (tSnap.empty) return alert('Team not found');
+        const teamId = tSnap.docs[0].data().team_id;
 
-            // If checklist exists and has items, add progress bar
-            if (totalItems > 0) {
-                const progressBar = document.createElement('div');
-                progressBar.className = 'progress-bar';
-
-                const progressFill = document.createElement('div');
-                progressFill.className = 'progress-fill';
-                progressFill.style.width = statusPercent + '%';
-
-                progressBar.appendChild(progressFill);
-                taskInfo.appendChild(progressBar);
-            }
-
-            taskCard.appendChild(taskInfo);
-
-            // Arrow span
-            const arrowSpan = document.createElement('span');
-            arrowSpan.className = 'arrow';
-            arrowSpan.innerHTML = '&rarr;';
-            arrowSpan.onclick = function() { goToTask(this); };
-
-            taskCard.appendChild(arrowSpan);
-
-            container.appendChild(taskCard);
+        const newTaskId = Date.now();   // numeric task_id
+        await db.collection('tasks').add({
+          title, project_id:projectId, team_id:teamId,
+          email:currentUser.email, deadline:null,
+          checklist:[], status:'inProgress', task_id:newTaskId
         });
-        
-</script>
+        // onSnapshot will automatically refresh the list
+      };
+    }
 
+    /* ─────── Page entry point ─────── */
+    window.addEventListener('load', () => {
+      auth.onAuthStateChanged(async user => {
+        if (!user) {
+          document.querySelector('.container').innerHTML = '<p>Please log in.</p>';
+          return;
+        }
+        currentUser = user;
+        try {
+          await loadCurrentTeam();
+          startTaskListener();
+          initAddTaskButton();          // ← FAB now works
+        } catch (e) {
+          console.error(e);
+          alert('Failed to load team data');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
