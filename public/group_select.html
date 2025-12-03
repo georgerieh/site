@@ -118,25 +118,6 @@
       text-decoration: underline;
     }
 
-    .navigation-bar {
-      height: 5px;
-      background: #333;
-      width: 134px;
-      margin: 0 auto 20px;
-      border-radius: 3px;
-    }
-
-    #teamList {
-      max-width: 340px;
-      margin: 80px auto 20px;
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.18);
-      text-align: center;
-      z-index: 100;
-    }
-
     #teamList h4 {
       margin-bottom: 16px;
       font-weight: 600;
@@ -188,10 +169,6 @@
     <button class="choice-btn" onclick="goToSelectGroup()">Choice is on</button>
     <button class="random-btn" onclick="goToDashboard()">Random Choice</button>
   </div>
-
-  <div class="navigation-bar"></div>
-
-  <div id="teamList"></div>
 
   <script>
     firebase.initializeApp(firebaseConfig);
