@@ -205,7 +205,7 @@
 
         try {
           // Get user document from 'users' collection by email
-          const usersSnapshot = await db.collection('users').where('email', '==', user.email).get();
+          const usersSnapshot = await db.collection('user').where('email', '==', user.email).get();
           if (usersSnapshot.empty) {
             // No user doc found, clear stats
             document.getElementById('userProgress').style.width = '0%';
