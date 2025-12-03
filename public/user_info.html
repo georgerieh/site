@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>User Info</title>
+  <title>User Info • CoLabSpace</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -20,6 +20,7 @@
       font-size: 20px;
       font-weight: 600;
       margin: 20px 0 28px;
+      color: #333;
     }
 
     .container { padding: 0 16px; }
@@ -47,6 +48,7 @@
       font-size: 22px;
       font-weight: 600;
       margin-bottom: 24px;
+      color: #202124;
     }
 
     /* Progress Bar - same as Dashboard */
@@ -59,7 +61,7 @@
     }
     .progress-bar {
       height: 100%;
-      width: 0%; /* will be set by JS */
+      width: 0%;
       background: linear-gradient(to right, #6200ea, #b388ff);
       border-radius: 6px;
       transition: width 0.8s ease;
@@ -91,12 +93,11 @@
     .label { color: #5f6368; }
     .value { font-weight: 600; }
 
-    /* Back Button - bottom left */
+    /* Back Button - Bottom Left */
     .back-btn {
       position: fixed;
       bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 20px;
       width: 56px;
       height: 56px;
       background: white;
@@ -111,6 +112,9 @@
       cursor: pointer;
       border: none;
     }
+    .back-btn:active {
+      transform: scale(0.94);
+    }
   </style>
 </head>
 <body>
@@ -120,7 +124,7 @@
   <div class="container">
 
     <div class="user-header">
-      <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="You" class="avatar" id="userAvatar">
+      <img src="" alt="You" class="avatar" id="userAvatar">
       <div class="username" id="userName">Loading...</div>
       <div class="progress-container">
         <div class="progress-bar" id="userProgress"></div>
@@ -153,8 +157,8 @@
 
   </div>
 
-  <!-- Back Button -->
-  <div class="back-btn" onclick="history.back()">↩</div>
+  <!-- Back Button - Bottom Left -->
+  <button class="back-btn" onclick="history.back()">Back</button>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -181,14 +185,13 @@
       }
 
       try {
-        // 1. Get numeric user ID from 'user' collection
+        // 1. Get user document from 'user' collection
         const userSnap = await db.collection("user")
           .where("email", "==", user.email)
           .limit(1)
           .get();
 
         if (userSnap.empty) {
-          console.warn("User document not found");
           document.getElementById("userName").textContent = user.displayName || "You";
           return;
         }
@@ -197,26 +200,27 @@
         const numericUserId = userDoc.data().id;
         const displayName = user.displayName || user.email.split('@')[0];
 
-        // Update name + avatar
+        // Update name & avatar
         document.getElementById("userName").textContent = displayName;
-        document.getElementById("userAvatar").src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e8def8&color=6200ea&bold=true`;
+        document.getElementById("userAvatar").src = 
+          user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e8def8&color=6200ea&bold=true&size=128`;
 
-        // 2. Get ALL tasks assigned to this user (by numeric id)
-        const tasksSnap = await db.collection("tasks")
-          .where("user_id", "==", Number(numericUserId))
-          .get();
+        // 2. Fetch tasks — support both number and string user_id
+        const [byNumber, byString, byEmail] = await Promise.all([
+          db.collection("tasks").where("user_id", "==", numericUserId).get(),
+          db.collection("tasks").where("user_id", "==", numericUserId.toString()).get(),
+          db.collection("tasks").where("email", "==", user.email).get()
+        ]);
+
+        const allTasks = [...byNumber.docs, ...byString.docs, ...byEmail.docs];
 
         let totalTasks = 0;
         let completedTasks = 0;
 
-        tasksSnap.forEach(doc => {
+        allTasks.forEach(doc => {
           const task = doc.data();
-          console.log("Task loaded:", task); // log full task
 
-          if (!task || task.is_deleted === true) {
-            console.log("Skipping deleted task:", task?.task_id);
-            return; // exclude deleted
-          }
+          if (!task || task.is_deleted === true || task?.is_archived === true) return;
 
           totalTasks++;
 
@@ -229,13 +233,12 @@
           }
 
           if (isCompleted) {
+
+          const status = (task.status || "").toString().toLowerCase();
+          if (status === "completed" || status === "done") {
             completedTasks++;
-            console.log(`Task completed: ${task.task_id || task.title || 'unknown'}`);
-          } else {
-            console.log(`Task in progress: ${task.task_id || task.title || 'unknown'}`);
           }
         });
-        console.log("Totals calculated:", { totalTasks, completedTasks, inProgressTasks: totalTasks - completedTasks });
 
         const inProgressTasks = totalTasks - completedTasks;
         const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -246,12 +249,14 @@
         document.getElementById("completedTasks").textContent = completedTasks;
         document.getElementById("inProgressTasks").textContent = inProgressTasks;
 
-        // Optional: show rating if exists
+        // Rating
         const rating = userDoc.data().rating;
-        document.getElementById("userRating").textContent = rating ? `${rating}/10 ★` : "—";
+        document.getElementById("userRating").innerHTML = rating ? `${rating}/10 Stars` : "—";
+
+        console.log("User stats loaded:", { totalTasks, completedTasks, inProgressTasks, progressPercent });
 
       } catch (error) {
-        console.error("Error loading user stats:", error);
+        console.error("Error loading user info:", error);
         document.getElementById("userName").textContent = "Error loading data";
       }
     });
