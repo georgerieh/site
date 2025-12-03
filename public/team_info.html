@@ -247,7 +247,10 @@
             const snap = await db.collection("user").where("id", "in", chunk).get();
             snap.forEach(d => emailMap[d.data().id] = d.data().email || d.data().id);
           }
-          const memberEmails = memberIds.map(id => emailMap[id] || `User ${id}`);
+          const memberEmails = memberIds.map(id => {
+              if (typeof id === 'number') return emailMap[id] || `Unknown`;
+              return emailMap[id] || `Unknown`;
+          });
 
           // Initialize task stats for numeric user IDs
           const taskStats = {};
@@ -262,12 +265,12 @@
           // Count tasks for each member
           tasksSnap.forEach(doc => {
               const t = doc.data();
-              if (typeof t.user_id !== 'number') return; // ignore malformed user_id
-              if (!memberIds.includes(t.user_id)) return; // ignore tasks not assigned to this team
-              if (t.is_archived === true || t.is_deleted === true) return; // skip archived/deleted
+              if (t.is_archived === true || t.is_deleted === true) return;
+              const uid = t.user_id;
+              if (uid === undefined || !memberIds.includes(uid)) return;
 
-              taskStats[t.user_id].total++;
-              if (t.status === 'Completed') taskStats[t.user_id].completed++;
+              taskStats[uid].total++;
+              if (t.status === 'Completed') taskStats[uid].completed++;
           });
 
           // Prepare labels and data arrays
