@@ -226,17 +226,19 @@
         allTasks.forEach(doc => {
           const task = doc.data();
 
-          // Skip deleted tasks
-          if (task.is_deleted === true) return;
+          if (task.is_deleted === true || task.is_archived === true) return;
 
-          // Count archived tasks
-          if (task.is_archived === true) {
-            archivedTasks++;
-            return; // don't count archived tasks in active stats
+          totalTasks++;
+
+          // Task is completed if status is 'Completed' or all checklist items done
+          let isCompleted = false;
+          if (task.status && task.status.toString().toLowerCase() === 'completed') {
+            isCompleted = true;
+          } else if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+            isCompleted = task.checklist.every(c => c.done === true);
           }
 
-          // Count active tasks
-          totalTasks++;
+          if (isCompleted) {
 
           const status = (task.status || "").toString().toLowerCase();
           if (status === "completed" || status === "done") {
