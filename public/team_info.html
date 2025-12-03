@@ -110,8 +110,9 @@
     /* Floating Back Button */
     .back-btn {
       position: fixed;
-      bottom: 30px;                    /* same spacing as dashboard */
-      left: 20px;                      /* moved to bottom-left */
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 56px;
       height: 56px;
       background: white;
@@ -122,9 +123,6 @@
       font-size: 32px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       color: #333;
-      z-index: 100;
-      cursor: pointer;
-      border: none;                    /* added – matches dashboard */
     }
   </style>
 </head>
@@ -142,7 +140,7 @@
   <div id="teamContainer"></div>
 
   <!-- Floating Back Button -->
-  <button class="back-btn" onclick="history.back()">Back</button>
+  <button class="back-btn" onclick="history.back()">↩</button>
 
   <script>
     const firebaseConfig = {
@@ -251,7 +249,9 @@
           }
           const memberEmails = memberIds.map(id => emailMap[id] || `User ${id}`);
 
-          const currentUserIndex = memberIds.findIndex(id => id === userId || id === numericUserId);
+          // Initialize task stats
+          const taskStats = {};
+          memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
 
           // Fetch tasks
           const tasksSnap = await db.collection("tasks")
@@ -259,21 +259,25 @@
             .where("team_id", "==", teamId)
             .get();
 
-          const taskStats = {};
-          memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
           tasksSnap.forEach(doc => {
             const t = doc.data();
-            if (memberIds.includes(t.user_id)) {
-              taskStats[t.user_id].total++;
-              if (t.status === 'Completed') taskStats[t.user_id].completed++;
+            const uid = t.user_id;
+            if (memberIds.includes(uid) && t.is_archived !== true && t.is_deleted !== true) {
+                taskStats[uid].total++;
+                if (t.status === 'Completed') taskStats[uid].completed++;
             }
           });
 
+          // Prepare labels and data arrays
           const labels = memberEmails;
-          const data = memberIds.map(id => 
-            taskStats[id].total ? Math.round((taskStats[id].completed / taskStats[id].total) * 100) : 0
-          );
+          const data = memberIds.map(id => {
+              const stats = taskStats[id];
+              return stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+          });
           const memberTaskStats = memberIds.map(id => taskStats[id]);
+
+          // Find current user index
+          const currentUserIndex = memberIds.findIndex(id => id === userId || id === numericUserId);
 
           renderTeamChart(labels, data, memberTaskStats, currentUserIndex);
 
