@@ -256,15 +256,12 @@
 
           // Fetch tasks for each member
           for (const uid of memberIds) {
+            const tasksSnapshot = await db.collection('tasks')
+            .where('user_id', '==', uid)
+            .get();
             console.log("Fetching tasks for user:", uid);
-            const tasksSnapshot = await db.collection('tasks')
-              .where('user_id', '==', uid)
-              .get();
             console.log("Returned tasks:", tasksSnapshot.docs.map(d => d.data()));
-            const tasksSnapshot = await db.collection('tasks')
-              .where('user_id', '==', uid)
-              .get();
-
+            
             tasksSnapshot.forEach(doc => {
               const task = doc.data();
               if (task.is_archived === true || task.is_deleted === true) return;
