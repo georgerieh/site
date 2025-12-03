@@ -255,7 +255,7 @@
 
           // Initialize task stats
           const taskStats = {};
-          memberIds.forEach(id => taskStats[id] = { total: 0, completed: 0 });
+          memberIds.forEach(id => taskStats[String(id)] = { total: 0, completed: 0 });
 
           // Fetch tasks for each member
           for (const uid of memberIds) {
@@ -267,15 +267,15 @@
             
             tasksSnapshot.forEach(doc => {
               const task = doc.data();
-              // Ensure the task has a numeric user_id
-              if (typeof task.user_id !== 'number') return;
-              // Skip archived/deleted tasks
+              if (!task.user_id) return;
+              // Skip deleted tasks only; include archived
               if (task.is_deleted === true) return;
-              // Increment task counts for this user
-              taskStats[task.user_id] = taskStats[task.user_id] || { total: 0, completed: 0 };
-              taskStats[task.user_id].total++;
-              if (String(task.status).toLowerCase() === 'completed') taskStats[task.user_id].completed++;
-              console.log(`User ${task.user_id}: total=${taskStats[task.user_id].total}, completed=${task.user_id ? taskStats[task.user_id].completed : 0}`);
+              // Normalize ID to string to match memberIds keys
+              const uidKey = String(task.user_id);
+              taskStats[uidKey] = taskStats[uidKey] || { total: 0, completed: 0 };
+              taskStats[uidKey].total++;
+              if (task.status && task.status.toLowerCase() === 'completed') taskStats[uidKey].completed++;
+              console.log(`User ${uidKey}: total=${taskStats[uidKey].total}, completed=${taskStats[uidKey].completed}`);
             });
           }
 
@@ -286,10 +286,10 @@
           // Prepare chart data
           const labels = memberEmails;
           const data = memberIds.map(id => {
-            const stats = taskStats[id];
-            return stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+            const stats = taskStats[String(id)];
+            return stats && stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
           });
-          const memberTaskStats = memberIds.map(id => taskStats[id]);
+          const memberTaskStats = memberIds.map(id => taskStats[String(id)]);
           const currentUserIndex = memberIds.findIndex(id => id === numericUserId);
 
           insertChartCanvas();
