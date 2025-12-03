@@ -211,12 +211,23 @@
 
         tasksSnap.forEach(doc => {
           const task = doc.data();
-          if (task.is_deleted === true) return; // exclude deleted
+          console.log("Task loaded:", task); // log full task
+
+          if (task.is_deleted === true) {
+            console.log("Skipping deleted task:", task.task_id);
+            return; // exclude deleted
+          }
+
           totalTasks++;
-          if (task.status && task.status.toString().toLowerCase() === "completed") {
+          const isCompleted = task.status && task.status.toString().toLowerCase() === "completed";
+          if (isCompleted) {
             completedTasks++;
+            console.log(`Task completed: ${task.task_id || task.title || 'unknown'}`);
+          } else {
+            console.log(`Task in progress: ${task.task_id || task.title || 'unknown'}`);
           }
         });
+        console.log("Totals calculated:", { totalTasks, completedTasks, inProgressTasks: totalTasks - completedTasks });
 
         const inProgressTasks = totalTasks - completedTasks;
         const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
