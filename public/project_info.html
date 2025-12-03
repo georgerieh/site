@@ -216,19 +216,50 @@ async function goToTask(element) {
     let currentUser = null;
     let showMineOnly = true;
     let showArchivedOnly = false;
+    let currentTeamId = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                fetchTasks();
-            } else {
-                // Not logged in, redirect to login or handle accordingly
-                currentUser = null;
-                document.querySelector('.container').innerHTML = '<p>Please log in to see your tasks.</p>';
-            }
-        });
+window.addEventListener('DOMContentLoaded', () => {
+    auth.onAuthStateChanged(async user => {
+        if (user) {
+            currentUser = user;
+            await loadCurrentTeam();   // get this user’s team_id
+            fetchTasks();              // now load tasks
+        } else {
+            currentUser = null;
+            document.querySelector('.container').innerHTML =
+                '<p>Please log in to see your tasks.</p>';
+        }
     });
+});
+
+async function loadCurrentTeam() {
+    const projectId = 1; // use your real project id if different
+
+    // 1) find numeric user id from "user" collection
+    const userSnap = await db.collection('user')
+        .where('email', '==', currentUser.email)
+        .get();
+
+    if (userSnap.empty) {
+        console.error('User not found in user collection');
+        return;
+    }
+    const currentUserId = userSnap.docs[0].data().id;
+
+    // 2) find team for this project that contains this user
+    const teamSnap = await db.collection('team')
+        .where('project_id', '==', projectId)
+        .where('users', 'array-contains', currentUserId)
+        .get();
+
+    if (teamSnap.empty) {
+        console.error('Team not found for user');
+        return;
+    }
+
+    currentTeamId = teamSnap.docs[0].data().team_id;
+}
+
 
     function fetchTasks() {
         db.collection('tasks').onSnapshot(snapshot => {
@@ -357,33 +388,34 @@ async function goToTask(element) {
         // Filter tasks based on flags
         let filteredTasks = [];
         if (showArchivedOnly) {
+    // only archived tasks from my team
             filteredTasks = allTasks.filter(task =>
                 task.is_archived === true &&
-                task.is_deleted !== true
-            );
+                task.is_deleted !== true &&
+                (!currentTeamId || task.team_id === currentTeamId)
+       );
         } else if (showMineOnly) {
+    // only my tasks, in my team
             filteredTasks = allTasks.filter(task =>
                 task.email === currentUser.email &&
                 task.is_archived !== true &&
-                task.is_deleted !== true
-            );
+                task.is_deleted !== true &&
+                (!currentTeamId || task.team_id === currentTeamId)
+        );
         } else {
-            let userTeam = null;
-            if (currentUser.team) userTeam = currentUser.team;
-            else if (currentUser.customClaims && currentUser.customClaims.team) userTeam = currentUser.customClaims.team;
+    // "All tasks" tab → all tasks in my team
+            if (currentTeamId) {
+                filteredTasks = allTasks.filter(task =>
+                    task.team_id === currentTeamId &&
+                    task.is_archived !== true &&
+                    task.is_deleted !== true
+        );
+        } else {
+        // if we don't know the team yet, show nothing (safer)
+        filteredTasks = [];
+    }
 
-            if (userTeam) {
-                filteredTasks = allTasks.filter(task =>
-                    task.team === userTeam &&
-                    task.is_archived !== true &&
-                    task.is_deleted !== true
-                );
-            } else {
-                filteredTasks = allTasks.filter(task =>
-                    task.is_archived !== true &&
-                    task.is_deleted !== true
-                );
-            }
+
         }
 
         if (filteredTasks.length === 0) {
