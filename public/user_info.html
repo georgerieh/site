@@ -206,12 +206,14 @@
           .where("user_id", "==", numericUserId)
           .get();
 
-        let totalTasks = tasksSnap.size;
+        let totalTasks = 0;
         let completedTasks = 0;
 
         tasksSnap.forEach(doc => {
-          const status = doc.data().status;
-          if (status && status.toString().toLowerCase() === "completed") {
+          const task = doc.data();
+          if (task.is_deleted === true) return; // exclude deleted
+          totalTasks++;
+          if (task.status && task.status.toString().toLowerCase() === "completed") {
             completedTasks++;
           }
         });

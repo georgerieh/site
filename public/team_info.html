@@ -257,27 +257,21 @@
           const taskStats = {};
           memberIds.forEach(id => taskStats[String(id)] = { total: 0, completed: 0 });
 
-          // Fetch tasks for each member
-          for (const uid of memberIds) {
-            const tasksSnapshot = await db.collection('tasks')
-            .where('user_id', '==', uid)
+          // Fetch all tasks for the team in one query
+          const tasksSnapshot = await db.collection('tasks')
+            .where('user_id', 'in', memberIds)
             .get();
-            console.log("Fetching tasks for user:", uid);
-            console.log("Returned tasks:", tasksSnapshot.docs.map(d => d.data()));
-            
-            tasksSnapshot.forEach(doc => {
-              const task = doc.data();
-              if (!task.user_id) return;
-              // Skip deleted tasks only; include archived
-              if (task.is_deleted === true) return;
-              // Normalize ID to string to match memberIds keys
-              const uidKey = String(task.user_id);
-              taskStats[uidKey] = taskStats[uidKey] || { total: 0, completed: 0 };
-              taskStats[uidKey].total++;
-              if (task.status && task.status.toLowerCase() === 'completed') taskStats[uidKey].completed++;
-              console.log(`User ${uidKey}: total=${taskStats[uidKey].total}, completed=${taskStats[uidKey].completed}`);
-            });
-          }
+          console.log("All tasks for team:", tasksSnapshot.docs.map(d => d.data()));
+
+          tasksSnapshot.forEach(doc => {
+            const task = doc.data();
+            if (!task.user_id) return;
+            if (task.is_deleted === true) return; // exclude deleted
+            const uidKey = String(task.user_id);
+            taskStats[uidKey] = taskStats[uidKey] || { total: 0, completed: 0 };
+            taskStats[uidKey].total++;
+            if (task.status && task.status.toLowerCase() === 'completed') taskStats[uidKey].completed++;
+          });
 
           console.log("Final task stats:", taskStats);
           console.log("Member IDs:", memberIds);
