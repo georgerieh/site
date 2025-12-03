@@ -261,7 +261,7 @@
                   taskStats[uid].total++;
                   if (task.status === 'Completed') taskStats[uid].completed++;
                 });
-
+            }
             // Prepare chart data
             const labels = memberEmails;
             const data = memberIds.map(id => {
