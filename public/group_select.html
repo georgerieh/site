@@ -210,8 +210,9 @@
       const currentUserId = userSnap.docs[0].data().id;
 
       // Get project max_number
-      const projectDoc = await db.collection("project")
+      const projectQuery = await db.collection("project")
       .where("project_id", "==", projectId)
+      .limit(1)
       .get();
       if (projectDoc.empty) return alert("Project not found");
       const maxUsers = Number(projectDoc.docs[0].data().max_number);
