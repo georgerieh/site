@@ -427,6 +427,16 @@
     const db = firebase.firestore();
 
         // --- GLOBAL COUNTERS ---
+
+        // --- DEADLINE FORMATTER ---
+        function formatDeadline(daysSinceEpoch) {
+            if (!daysSinceEpoch) return '';
+            const date = new Date(daysSinceEpoch * 24 * 60 * 60 * 1000);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
         let checklistCounter = 1;
         let fieldCounter = 1;
         let subtaskCounter = 1;
@@ -781,7 +791,66 @@
     }
     </script>
 
+</button>
+<!-- Save Changes Button (Floating) -->
+<button id="save-changes-btn" style="
+    position: fixed;
+    bottom: 90px;
+    right: 25px;
+    background-color: #7a63c6;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 999;
+">Save Changes</button>
 </body>
 <button class="floating-status-btn" onclick="toggleStatus()">Change Status</button>
 <button class="floating-delete-btn" onclick="deleteTask()">Delete</button>
+<script>
+// Save Changes Function
+async function saveChanges() {
+    const taskId = Number(getTaskIdFromUrl());
+    const snap = await db.collection('tasks').where('task_id', '==', taskId).get();
+    if (snap.empty) {
+        alert("Task not found.");
+        return;
+    }
+    const docId = snap.docs[0].id;
+
+    // Collect current field values
+    const titleElem = document.querySelector('.task-header-card .task-title-row h3');
+    const deadlineInput = document.getElementById('taskDeadlineInput');
+    const checklistElems = document.querySelectorAll('#checklist-container .section-card');
+    const textFieldElems = document.querySelectorAll('#text-field-container .dynamic-text-field-inner textarea, #text-field-container .dynamic-text-field textarea:not(.heading)');
+
+    const info = { checklist: [] };
+    checklistElems.forEach((card) => {
+        const title = card.querySelector('input.editable-text.heading')?.value || '';
+        const deadlineVal = card.querySelector('input[type="date"]')?.value || '';
+        const deadlineNum = deadlineVal ? Math.floor(new Date(deadlineVal).getTime()/(1000*60*60*24)) : null;
+        const desc = card.querySelector('textarea')?.value || '';
+        const done = card.querySelector('input[type="checkbox"]')?.checked || false;
+        info.checklist.push({ Title: title, Deadline: deadlineNum, Description: desc, done: done });
+    });
+
+    const comments = [];
+    textFieldElems.forEach(textarea => comments.push(textarea.value));
+
+    await db.collection('tasks').doc(docId).update({
+        title: titleElem ? titleElem.textContent : '',
+        deadline: deadlineInput ? (deadlineInput.value ? Math.floor(new Date(deadlineInput.value).getTime()/(1000*60*60*24)) : null) : null,
+        info: info,
+        comments: comments
+    });
+
+    alert('Task saved successfully!');
+}
+
+document.getElementById('save-changes-btn').addEventListener('click', saveChanges);
+</script>
 </html>
