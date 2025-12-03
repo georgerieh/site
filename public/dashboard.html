@@ -321,24 +321,28 @@
             if (usersSnap.empty) return;
             const userId = usersSnap.docs[0].data().id;
 
-            const tasksSnap = await db.collection("tasks").where("user_id", "==", userId).get();
-            let totalTasks = tasksSnap.size;
-            let progressSum = 0;
+            // Fetch all tasks for the teams the user belongs to (include archived, exclude deleted)
+            const teamSnap = await db.collection("team").where("users", "array-contains", userId).get();
+            const teamIds = teamSnap.docs.map(doc => doc.data().team_id);
 
-            tasksSnap.forEach(doc => {
-                const t = doc.data();
-                if (!t) return;
+            if (teamIds.length) {
+                const tasksSnap = await db.collection("tasks")
+                                          .where("team_id", "in", teamIds)
+                                          .get();
 
-                if (t.status && t.status.toLowerCase() === "completed") {
-                    progressSum += 1; // Completed task counts as full
-                } else if (Array.isArray(t.checklist) && t.checklist.length > 0) {
-                    const doneCount = t.checklist.filter(c => c.done === true).length;
-                    progressSum += doneCount / t.checklist.length; // Fraction of checklist done
-                }
-            });
+                let completedTasks = 0;
+                let totalTasks = 0;
 
-            const progressPercent = totalTasks > 0 ? Math.round((progressSum / totalTasks) * 100) : 0;
-            document.querySelector(".progress-bar").style.width = progressPercent + "%";
+                tasksSnap.forEach(doc => {
+                    const t = doc.data();
+                    if (!t || t.is_deleted === true) return; // Exclude deleted
+                    totalTasks++;
+                    if (t.status && t.status.toLowerCase() === "completed") completedTasks++;
+                });
+
+                const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                document.querySelector(".progress-bar").style.width = progressPercent + "%";
+            }
         } else {
             // Not signed in → redirect or keep placeholder
             // window.location.href = "/login.html";
