@@ -15,22 +15,6 @@
       color: #202124;
     }
 
-    /* Android Status Bar */
-    .status-bar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 50px;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      font-weight: 600;
-      font-size: 15px;
-      z-index: 1000;
-      border-bottom: 1px solid #eee;
-    }
-
     .page-title {
       text-align: center;
       font-size: 20px;
@@ -40,58 +24,58 @@
 
     .container { padding: 0 16px; }
 
-    /* User Header Card */
     .user-header {
       background: white;
       border-radius: 20px;
-      padding: 24px 20px;
+      padding: 28px 20px;
       margin-bottom: 16px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
       text-align: center;
     }
 
     .avatar {
-      width: 80px;
-      height: 80px;
+      width: 86px;
+      height: 86px;
       border-radius: 50%;
       object-fit: cover;
       border: 4px solid #e8def8;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      margin-bottom: 16px;
     }
 
     .username {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 600;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
-    /* Progress Bar */
+    /* Progress Bar - same as Dashboard */
     .progress-container {
       height: 12px;
       background: #e0e0e0;
       border-radius: 6px;
       overflow: hidden;
+      margin: 0 10px;
     }
     .progress-bar {
-      width: 40%;
       height: 100%;
+      width: 0%; /* will be set by JS */
       background: linear-gradient(to right, #6200ea, #b388ff);
       border-radius: 6px;
+      transition: width 0.8s ease;
     }
 
-    /* Stats Card */
     .stats-card {
       background: white;
       border-radius: 20px;
-      padding: 20px;
+      padding: 24px 20px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
 
     .section-title {
       font-size: 18px;
       font-weight: 600;
-      margin: 8px 0 20px;
+      margin-bottom: 20px;
       color: #5f6368;
     }
 
@@ -104,25 +88,14 @@
     }
     .stat-row:last-child { border-bottom: none; }
 
-    .label {
-      color: #5f6368;
-    }
-    .value {
-      font-weight: 600;
-    }
+    .label { color: #5f6368; }
+    .value { font-weight: 600; }
 
-    .rating {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* Back Button */
+    /* Back Button - bottom left */
     .back-btn {
       position: fixed;
       bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 20px;
       width: 56px;
       height: 56px;
       background: white;
@@ -133,6 +106,9 @@
       font-size: 32px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       color: #333;
+      z-index: 100;
+      cursor: pointer;
+      border: none;
     }
   </style>
 </head>
@@ -142,44 +118,48 @@
 
   <div class="container">
 
-    <!-- User Header with Progress -->
-    <div class="user-header" id="userHeader">
-      <div class="username">You</div>
+    <div class="user-header">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="You" class="avatar" id="userAvatar">
+      <div class="username" id="userName">Loading...</div>
       <div class="progress-container">
         <div class="progress-bar" id="userProgress"></div>
       </div>
     </div>
 
-    <!-- Stats Card -->
     <div class="stats-card">
       <div class="section-title">Your situation</div>
 
       <div class="stat-row">
-        <span class="label">Projects number</span>
-        <span class="value" id="projectsCount"></span>
+        <span class="label">Total tasks</span>
+        <span class="value" id="totalTasks">0</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="label">Completed</span>
+        <span class="value" id="completedTasks">0</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="label">In progress</span>
+        <span class="value" id="inProgressTasks">0</span>
       </div>
 
       <div class="stat-row">
         <span class="label">Your rating</span>
-        <span class="value rating" id="userRating"></span>
-      </div>
-
-      <div class="stat-row">
-        <span class="label">Deadlines to complete</span>
-        <span class="value" id="deadlinesCount"></span>
+        <span class="value" id="userRating">—</span>
       </div>
     </div>
 
   </div>
 
-  <!-- Floating Back Button -->
+  <!-- Back Button -->
   <div class="back-btn" onclick="history.back()">↩</div>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyApNGohDeMrQWBewscU5PuBRR6BQ3m2uQQ",
@@ -189,76 +169,70 @@
       messagingSenderId: "1096273499808",
       appId: "1:1096273499808:web:42012f619a3cbced321bc5"
     };
-    // Initialize Firebase
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    firebase.auth().onAuthStateChanged(async user => {
-      if (user) {
-        const userName = user.displayName || "User";
-        document.querySelector(".username").textContent = `${userName} 👋`;
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        document.getElementById("userName").textContent = "Not signed in";
+        return;
+      }
 
-        try {
-          // Get user document from 'users' collection by email
-          const usersSnapshot = await db.collection('user').where('email', '==', user.email).get();
-          if (usersSnapshot.empty) {
-            // No user doc found, clear stats
-            document.getElementById('userProgress').style.width = '0%';
-            document.getElementById('projectsCount').textContent = '0';
-            document.getElementById('deadlinesCount').textContent = '0';
-            document.getElementById('userRating').textContent = 'N/A';
-            return;
-          }
-          const userDoc = usersSnapshot.docs[0];
-          const userId = userDoc.data().id;
+      try {
+        // 1. Get numeric user ID from 'user' collection
+        const userSnap = await db.collection("user")
+          .where("email", "==", user.email)
+          .limit(1)
+          .get();
 
-          // Query Firestore tasks collection for this userId
-          const tasksSnapshot = await db.collection('tasks')
-            .where('user_id', '==', userId)
-            .get();
-
-          let totalTasks = tasksSnapshot.size;
-          let completedTasks = 0;
-          let inProgressTasks = 0;
-
-          tasksSnapshot.forEach(doc => {
-            const task = doc.data();
-            if (task.status === 'inProgress') {
-              inProgressTasks++;
-            } else if (task.status === 'completed') {
-              completedTasks++;
-            }
-          });
-
-          // Calculate progress as completed / total * 100
-          let progressPercent = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-          // Update DOM with Firestore data
-          document.getElementById('userProgress').style.width = progressPercent + '%';
-          document.getElementById('projectsCount').textContent = totalTasks;
-          document.getElementById('deadlinesCount').textContent = inProgressTasks;
-
-          // Update userRating if available in userDoc
-          const userRating = userDoc.data().rating || "N/A";
-          document.getElementById('userRating').textContent = userRating;
-
-        } catch (err) {
-          // On error, clear or keep previous values silently
-          document.getElementById('userProgress').style.width = '0%';
-          document.getElementById('projectsCount').textContent = '0';
-          document.getElementById('deadlinesCount').textContent = '0';
-          document.getElementById('userRating').textContent = 'N/A';
+        if (userSnap.empty) {
+          console.warn("User document not found");
+          document.getElementById("userName").textContent = user.displayName || "You";
+          return;
         }
-      } else {
-        // Not signed in → keep placeholder or redirect if needed
-        document.querySelector(".username").textContent = "You";
-        document.getElementById('userProgress').style.width = '0%';
-        document.getElementById('projectsCount').textContent = '';
-        document.getElementById('deadlinesCount').textContent = '';
-        document.getElementById('userRating').textContent = '';
+
+        const userDoc = userSnap.docs[0];
+        const numericUserId = userDoc.data().id;
+        const displayName = user.displayName || user.email.split('@')[0];
+
+        // Update name + avatar
+        document.getElementById("userName").textContent = displayName;
+        document.getElementById("userAvatar").src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e8def8&color=6200ea&bold=true`;
+
+        // 2. Get ALL tasks assigned to this user (by numeric id)
+        const tasksSnap = await db.collection("tasks")
+          .where("user_id", "==", numericUserId)
+          .get();
+
+        let totalTasks = tasksSnap.size;
+        let completedTasks = 0;
+
+        tasksSnap.forEach(doc => {
+          const status = doc.data().status;
+          if (status && status.toString().toLowerCase() === "completed") {
+            completedTasks++;
+          }
+        });
+
+        const inProgressTasks = totalTasks - completedTasks;
+        const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        // Update UI
+        document.getElementById("userProgress").style.width = progressPercent + "%";
+        document.getElementById("totalTasks").textContent = totalTasks;
+        document.getElementById("completedTasks").textContent = completedTasks;
+        document.getElementById("inProgressTasks").textContent = inProgressTasks;
+
+        // Optional: show rating if exists
+        const rating = userDoc.data().rating;
+        document.getElementById("userRating").textContent = rating ? `${rating}/10 ★` : "—";
+
+      } catch (error) {
+        console.error("Error loading user stats:", error);
+        document.getElementById("userName").textContent = "Error loading data";
       }
     });
   </script>
-
 </body>
 </html>

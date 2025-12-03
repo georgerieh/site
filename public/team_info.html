@@ -281,7 +281,7 @@
           console.log("Member emails:", memberEmails);
 
           // Prepare chart data
-          const labels = memberEmails;
+          const labels = userName;
           const data = memberIds.map(id => {
             const stats = taskStats[id];
             return stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
