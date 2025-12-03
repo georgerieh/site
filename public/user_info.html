@@ -211,50 +211,55 @@
           user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=e8def8&color=6200ea&bold=true&size=128`;
 
         // 2. Fetch all tasks (active + archived) for this user
-        const [byNumber, byString, byEmail] = await Promise.all([
-          db.collection("tasks").where("user_id", "==", numericUserId).get(),
-          db.collection("tasks").where("user_id", "==", numericUserId.toString()).get(),
-          db.collection("tasks").where("email", "==", user.email).get()
-        ]);
+const [byNumber, byString, byEmail] = await Promise.all([
+  db.collection("tasks").where("user_id", "==", numericUserId).get(),
+  db.collection("tasks").where("user_id", "==", numericUserId.toString()).get(),
+  db.collection("tasks").where("email", "==", user.email).get()
+]);
 
-        const allTasks = [...byNumber.docs, ...byString.docs, ...byEmail.docs];
+const allTasks = [...byNumber.docs, ...byString.docs, ...byEmail.docs];
 
-        let totalTasks = 0;
-        let completedTasks = 0;
-        let archivedTasks = 0;
+let totalTasks = 0;
+let completedTasks = 0;
+let archivedTasks = 0;
 
-        allTasks.forEach(doc => {
-          const task = doc.data();
+allTasks.forEach(doc => {
+  const task = doc.data();
 
-          if (task.is_deleted === true || task.is_archived === true) return;
+  // Skip fully deleted tasks
+  if (task.is_deleted === true) return;
 
-          totalTasks++;
+  // Count archived tasks
+  if (task.is_archived === true) {
+    archivedTasks++;
+    return; // don't count in active stats
+  }
 
-          // Task is completed if status is 'Completed' or all checklist items done
-          let isCompleted = false;
-          if (task.status && task.status.toString().toLowerCase() === 'completed') {
-            isCompleted = true;
-          } else if (Array.isArray(task.checklist) && task.checklist.length > 0) {
-            isCompleted = task.checklist.every(c => c.done === true);
-          }
+  // Count active tasks
+  totalTasks++;
 
-          if (isCompleted) {
+  // Check completion: either status = completed OR all checklist items done
+  let isCompleted = false;
+  if (task.status && task.status.toString().toLowerCase() === 'completed') {
+    isCompleted = true;
+  } else if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+    isCompleted = task.checklist.every(item => item.done === true);
+  }
 
-          const status = (task.status || "").toString().toLowerCase();
-          if (status === "completed" || status === "done") {
-            completedTasks++;
-          }
-        };
+  if (isCompleted) {
+    completedTasks++;
+  }
+});
 
-        const inProgressTasks = totalTasks - completedTasks;
-        const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+const inProgressTasks = totalTasks - completedTasks;
+const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-        // Update UI
-        document.getElementById("userProgress").style.width = progressPercent + "%";
-        document.getElementById("totalTasks").textContent = totalTasks;
-        document.getElementById("completedTasks").textContent = completedTasks;
-        document.getElementById("inProgressTasks").textContent = inProgressTasks;
-        document.getElementById("archivedTasks").textContent = archivedTasks;
+// Update UI
+document.getElementById("userProgress").style.width = progressPercent + "%";
+document.getElementById("totalTasks").textContent = totalTasks;
+document.getElementById("completedTasks").textContent = completedTasks;
+document.getElementById("inProgressTasks").textContent = inProgressTasks;
+document.getElementById("archivedTasks").textContent = archivedTasks;
 
         // Rating
         const rating = userDoc.data().rating;
