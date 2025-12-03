@@ -301,11 +301,16 @@
   </div>
   <div class="container"></div>
 
+  <script>
+    let userName = "User";
+  </script>
+
+
   <div class="back-btn" onclick="window.location.href='/group_choices.html'">↩</div>
   <script>
     firebase.auth().onAuthStateChanged(async user => {
         if (user) {
-            const userName = user.displayName || "User";
+            userName = user.displayName || "User";
     
             // Replace placeholder
             document.querySelector(".header h1").innerHTML =
