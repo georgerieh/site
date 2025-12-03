@@ -195,6 +195,7 @@
 
   <script>
     async function goToDashboard() {
+      firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
       const auth = firebase.auth();
       const projectId = 1; // replace with dynamic project id if needed
@@ -269,6 +270,7 @@
     }
 
     async function joinTeam(teamId) {
+      firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
       const auth = firebase.auth();
       const user = auth.currentUser;
