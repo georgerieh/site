@@ -110,8 +110,9 @@
     /* Floating Back Button */
     .back-btn {
       position: fixed;
-      bottom: 30px;                    /* same spacing as dashboard */
-      left: 20px;                      /* moved to bottom-left */
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 56px;
       height: 56px;
       background: white;
@@ -122,9 +123,6 @@
       font-size: 32px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       color: #333;
-      z-index: 100;
-      cursor: pointer;
-      border: none;                    /* added – matches dashboard */
     }
   </style>
 </head>
