@@ -387,34 +387,36 @@ async function loadCurrentTeam() {
         }
 
         // Filter tasks based on flags
+        // Filter tasks based on flags
         let filteredTasks = [];
-        if (showArchivedOnly) {
-    // only archived tasks from my team
+
+        if (!currentTeamId) {
+    // Team not loaded yet → show nothing (safer)
+            filteredTasks = [];
+        } else if (showArchivedOnly) {
+    // Archived tasks from my team
             filteredTasks = allTasks.filter(task =>
                 task.is_archived === true &&
                 task.is_deleted !== true &&
-                (!currentTeamId || task.team_id === currentTeamId)
-       );
+                task.team_id === currentTeamId
+         );
         } else if (showMineOnly) {
-    // only my tasks, in my team
+    // Only my tasks, in my team
             filteredTasks = allTasks.filter(task =>
                 task.email === currentUser.email &&
-                task.is_archived !== true &&
+                ask.is_archived !== true &&
                 task.is_deleted !== true &&
-                (!currentTeamId || task.team_id === currentTeamId)
+                task.team_id === currentTeamId
         );
         } else {
     // "All tasks" tab → all tasks in my team
-            if (currentTeamId) {
-                filteredTasks = allTasks.filter(task =>
-                    task.team_id === currentTeamId &&
-                    task.is_archived !== true &&
-                    task.is_deleted !== true
+            filteredTasks = allTasks.filter(task =>
+                task.team_id === currentTeamId &&
+                task.is_archived !== true &&
+                task.is_deleted !== true
         );
-        } else {
-        // if we don't know the team yet, show nothing (safer)
-        filteredTasks = [];
-    }
+}
+
 
 
         }
