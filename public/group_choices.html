@@ -230,7 +230,18 @@ async function renderTeams() {
 
     const teamSnap = await db.collection("team").where("project_id", "==", projectId).get();
     const container = document.querySelector(".container");
-    container.innerHTML = ""; // clear previous content
+    container.innerHTML = `
+      <div style="text-align:center; margin-top:20px;">
+          <button id="skip-group-btn" style="
+              padding: 10px 20px;
+              font-size: 16px;
+              border-radius: 12px;
+              background-color: #ccc;
+              border: none;
+              cursor: pointer;
+          ">Skip Group Selection</button>
+      </div>
+    `;
 
     teamSnap.docs.forEach(doc => {
         const team = doc.data();
@@ -257,6 +268,10 @@ async function renderTeams() {
             </div>
         `;
         container.insertAdjacentHTML("beforeend", teamHtml);
+    });
+
+    document.getElementById("skip-group-btn").addEventListener("click", () => {
+        window.location.href = "/dashboard.html";
     });
 }
 
