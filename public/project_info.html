@@ -315,16 +315,16 @@ async function loadCurrentTeam() {
                 // We'll use Firestore's auto-id for now
                 try {
                     const newTaskId = Date.now(); // numeric task_id
-                    await db.collection('tasks').doc().set({
-                        title: title,
-                        project_id: projectId,
-                        team_id: teamId,
-                        email: currentUser.email,
-                        deadline: null,
-                        checklist: [],
-                        status: 'inProgress',
-                        task_id: newTaskId
-                    });
+                await db.collection('tasks').doc().set({
+                    title: title,
+                    project_id: projectId,
+                    team_id: teamId,
+                    email: currentUser.email,
+                    deadline: null,
+                    checklist: [],
+                    status: 'inProgress',
+                    task_id: newTaskId
+                });
                     // No need to manually refresh, onSnapshot will update
                 } catch (e) {
                     alert('Error creating task.'); return;
@@ -478,7 +478,7 @@ async function loadCurrentTeam() {
 
             // Task title
             const h3 = document.createElement('h3');
-            h3.textContent = task.title || 'Untitled Task';
+            h3.textContent = task.title || task.id || 'Untitled Task';
 
             // Responsible person (email)
             const pResponsible = document.createElement('p');
